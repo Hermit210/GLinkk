@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Blessing Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; color: #fff; }
+        .debug { background: #fff; padding: 10px; border: 1px solid #ccc; margin: 10px 0; }
+        .error { background: #ff4444; color: white; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🪙 Blessing Page Test</h1>
+    
+    <div class="debug">
+        <h3>URL Detection:</h3>
+        <p><strong>Current URL:</strong> <span id="currentUrl"></span></p>
+        <p><strong>Search Params:</strong> <span id="searchParams"></span></p>
+        <p><strong>Blessing ID:</strong> <span id="blessingId"></span></p>
+        
+        <h3>Page Elements:</h3>
+        <p><strong>Create Page:</strong> <span id="createPage"></span></p>
+        <p><strong>View Page:</strong> <span id="viewPage"></span></p>
+        
+        <h3>API Test:</h3>
+        <button onclick="testAPI()">Test API Call</button>
+        <div id="apiResult"></div>
+    </div>
+    
+    <div class="error" id="errorBox" style="display: none;"></div>
+    
+    <script>
+        console.log('Test page loaded');
+        
+        // URL Detection
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('searchParams').textContent = window.location.search;
+        document.getElementById('blessingId').textContent = new URLSearchParams(window.location.search).get('id');
+        
+        // Element Detection
+        const createPage = document.getElementById('createPage');
+        const viewPage = document.getElementById('viewPage');
+        
+        if (createPage) {
+            document.getElementById('createPage').textContent = createPage ? 'EXISTS' : 'NOT FOUND';
+        }
+        if (viewPage) {
+            document.getElementById('viewPage').textContent = viewPage ? 'EXISTS' : 'NOT FOUND';
+        }
+        
+        // API Test
+        async function testAPI() {
+            const blessingId = document.getElementById('blessingId').textContent;
+            if (!blessingId) {
+                document.getElementById('apiResult').innerHTML = '<span style="color: orange;">Please add ?id= to URL</span>';
+                return;
+            }
+            
+            try {
+                document.getElementById('apiResult').innerHTML = 'Testing API...';
+                const response = await fetch('/api/blessing/' + blessingId);
+                const data = await response.json();
+                
+                document.getElementById('apiResult').innerHTML = `
+                    <strong>API Response:</strong><br>
+                    Status: ${response.status}<br>
+                    Success: ${data.success}<br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('apiResult').textContent = 'API Error: ' + error.message;
+            }
+        }
+        
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.error);
+            document.getElementById('errorBox').style.display = 'block';
+            document.getElementById('errorBox').innerHTML = `
+                <strong>JavaScript Error:</strong><br>
+                ${e.error}<br>
+                <small>Line: ${e.lineno}, Column: ${e.colno}</small>
+            `;
+        });
+    </script>
+</body>
+</html>

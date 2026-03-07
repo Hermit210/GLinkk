@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - G-Link</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    :root {
+      --gold-primary: #FFD700;
+      --gold-light: #FFED4E;
+      --gold-dark: #D4AF37;
+      --bg-dark: #000000;
+      --bg-card: #0A0A0A;
+      --bg-elevated: #1A1A1A;
+      --text-light: #FFFFFF;
+      --text-muted: #FFD700;
+      --border-gold: rgba(255, 215, 0, 0.3);
+      --shadow-gold: 0 4px 20px rgba(255, 215, 0, 0.3);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    body {
+      background: #000000;
+      min-height: 100vh;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      color: #FFFFFF;
+      padding-top: 110px;
+    }
+    
+    .main-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Test Mode Banner */
+    .test-banner {
+      background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+      color: #000000;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 0.5rem;
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 101;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    /* Navbar */
+    .navbar {
+      position: fixed;
+      top: 32px;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: #0A0A0A;
+      border-bottom: 2px solid rgba(255, 215, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2.5rem;
+      z-index: 100;
+      box-shadow: 0 4px 25px rgba(255, 215, 0, 0.2);
+    }
+    
+    .navbar-left {
+      display: flex;
+      align-items: center;
+    }
+    
+    .user-badge {
+      background: rgba(255, 215, 0, 0.15);
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      color: #FFD700;
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .navbar-center {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .nav-link {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      padding: 0 1rem;
+      display: inline-flex;
+      align-items: center;
+      height: 64px;
+      white-space: nowrap;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      color: #FFD700;
+      background: rgba(255, 215, 0, 0.15);
+      border-radius: 6px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    
+    .navbar-right {
+      display: flex;
+      align-items: center;
+    }
+    
+    .logout-btn {
+      background: rgba(255, 215, 0, 0.15);
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      color: #FFD700;
+      padding: 0.4rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255, 215, 0, 0.25);
+      border-color: rgba(255, 215, 0, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    /* Gold Vault Card */
+    .gold-vault-card {
+      background: linear-gradient(145deg, #0A0A0A, #1A1A1A);
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      border-radius: 20px;
+      padding: 2rem 2.5rem;
+      max-width: 760px;
+      margin: 0 auto 1.5rem;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
+    }
+    
+    .vault-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #FFD700;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .gold-amount {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: #FFD700;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+    }
+    
+    .inr-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-top: 0.5rem;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
+    }
+    
+    .price-per-gram {
+      font-size: 0.85rem;
+      color: #FFD700;
+      margin-top: 0.5rem;
+      font-weight: 600;
+    }
+    
+    .powered-badge {
+      background: rgba(212,168,67,0.08);
+      border: 1px solid rgba(212,168,67,0.20);
+      color: #9A8860;
+      font-size: 0.7rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 100px;
+      display: inline-block;
+      margin-top: 1rem;
+    }
+    
+    /* Stat Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      max-width: 760px;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .stat-card {
+      background: #0A0A0A;
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-align: center;
+      min-height: 130px;
+      transition: all 0.2s ease;
+    }
+    
+    .stat-card:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2);
+    }
+    
+    .stat-icon {
+      color: #FFD700;
+      width: 28px;
+      height: 28px;
+      margin-bottom: 0.25rem;
+      filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.4));
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
+    }
+    
+    .stat-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      color: #FFD700;
+      font-weight: 600;
+    }
+    
+    /* Action Cards */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      max-width: 760px;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .action-card {
+      background: #0A0A0A;
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      text-align: center;
+      cursor: pointer;
+      text-decoration: none;
+      min-height: 150px;
+      transition: all 0.25s ease;
+    }
+    
+    .action-card:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      background: rgba(255, 215, 0, 0.1);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 35px rgba(255, 215, 0, 0.25);
+    }
+    
+    .action-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255, 215, 0, 0.15);
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+    }
+    
+    .action-icon {
+      color: #FFD700;
+      width: 22px;
+      height: 22px;
+      filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.4));
+    }
+    
+    .action-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #FFD700;
+      margin: 0;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .action-desc {
+      font-size: 0.75rem;
+      color: #FFFFFF;
+      margin: 0;
+      font-weight: 600;
+    }
+    
+    /* Blessing Pages Section */
+    .blessing-section {
+      background: #0A0A0A;
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 760px;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #FFD700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .create-blessing-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: transparent;
+      border: 2px dashed rgba(255, 215, 0, 0.4);
+      border-radius: 12px;
+      color: #FFD700;
+      font-size: 0.875rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 1.25rem;
+      transition: all 0.2s ease;
+      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.2);
+    }
+    
+    .create-blessing-btn:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      background: rgba(255, 215, 0, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+    }
+    
+    .blessing-card {
+      background: #0A0A0A;
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.1);
+    }
+    
+    .blessing-owner {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+    }
+    
+    .blessing-event {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #FFD700;
+      font-weight: 600;
+    }
+    
+    .blessing-gold {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #FFD700;
+      text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    }
+    
+    .view-btn {
+      background: transparent;
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      color: #FFD700;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .view-btn:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      background: rgba(255, 215, 0, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+    }
+    
+    .share-btn {
+      background: transparent;
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      color: #FFD700;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .share-btn:hover {
+      border-color: rgba(255, 215, 0, 0.6);
+      background: rgba(255, 215, 0, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .navbar-center {
+        display: none;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .stats-grid,
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .navbar {
+        padding: 0 1rem;
+      }
+      
+      .main-container {
+        padding: 0 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Test Mode Banner -->
+  <div id="testModeBanner" class="test-banner" style="display: none;">
+    🧪 TEST MODE ACTIVE - Payments are simulated
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="navbar-left">
+      <span class="user-badge" id="userName">khan saloni</span>
+    </div>
+    
+    <nav class="navbar-center">
+      <a href="create.html" class="nav-link">
+        <i data-lucide="plus-circle" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+        Create
+      </a>
+      <a href="profile.html" class="nav-link">
+        <i data-lucide="user-circle" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+        Profile
+      </a>
+      <a href="transactions.html" class="nav-link">
+        <i data-lucide="activity" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+        Transactions
+      </a>
+    </nav>
+    
+    <div class="navbar-right">
+      <button onclick="logout()" class="logout-btn">
+        <i data-lucide="log-out" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+        Logout
+      </button>
+    </div>
+  </header>
+
+<div class="main-container">
+  <!-- Gold Vault Card -->
+  <div class="gold-vault-card">
+    <div class="vault-label">YOUR GOLD VAULT</div>
+    <div class="gold-amount" id="goldGrams">0.0000g</div>
+    <div class="inr-value" id="goldValue">₹0</div>
+    <div class="price-per-gram" id="livePrice">Loading live price...</div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <i data-lucide="link" class="stat-icon"></i>
+      <div class="stat-number" id="linksCreated">0</div>
+      <div class="stat-label">Gold Links Sent</div>
+    </div>
+    <div class="stat-card">
+      <i data-lucide="activity" class="stat-icon"></i>
+      <div class="stat-number" id="totalTx">0</div>
+      <div class="stat-label">Total Transactions</div>
+    </div>
+    <div class="stat-card">
+      <i data-lucide="shield" class="stat-icon"></i>
+      <div class="stat-number" id="grailStatus">✓</div>
+      <div class="stat-label">GRAIL Connected</div>
+    </div>
+  </div>
+
+  <!-- Action Cards -->
+  <div class="actions-grid">
+    <a href="create.html" class="action-card">
+      <div class="action-icon-box">
+        <i data-lucide="plus" class="action-icon"></i>
+      </div>
+      <div class="action-title">Send Gold</div>
+      <div class="action-desc">Create a gold link</div>
+    </a>
+    <a href="profile.html" class="action-card">
+      <div class="action-icon-box">
+        <i data-lucide="user" class="action-icon"></i>
+      </div>
+      <div class="action-title">Profile</div>
+      <div class="action-desc">Your account</div>
+    </a>
+  </div>
+
+  <!-- My Blessing Pages Section -->
+  <div class="blessing-section">
+    <h3 class="section-title">
+      <i data-lucide="heart" style="width: 20px; height: 20px;"></i>
+      My Blessing Pages
+    </h3>
+    <button onclick="openBlessingModal()" class="create-blessing-btn">
+      <i data-lucide="plus-circle" style="width: 20px; height: 20px; margin-right: 8px;"></i>
+      Create New Blessing Page
+    </button>
+
+    <div id="blessingPagesGrid">
+      <!-- Blessing pages will be loaded here -->
+    </div>
+
+    <div id="noBlessings" style="display: none; text-align: center; padding: 2rem;">
+      <i data-lucide="heart" style="width: 64px; height: 64px; color: #9A8860; margin-bottom: 1rem;"></i>
+      <p style="color: #9A8860;">No blessing pages yet</p>
+      <p style="font-size: 0.875rem; color: #9A8860; margin-top: 0.5rem;">Create your first blessing page to receive gold blessings from friends and family!</p>
+    </div>
+  </div>
+
+  </div>
+
+<!-- Blessing Creation Modal -->
+<div id="blessingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" style="backdrop-filter: blur(5px);">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-gray-800 rounded-2xl max-w-md w-full p-6 border border-gold/30">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-bold text-gold">Create Blessing Page</h3>
+        <button onclick="closeBlessingModal()" class="text-gray-400 hover:text-white">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <form id="blessingForm">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gold mb-2">Your Name *</label>
+            <input type="text" id="blesserName" class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:border-gold focus:outline-none" readonly>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gold mb-2">Occasion</label>
+            <select id="blessingOccasion" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-gold focus:outline-none" required>
+              <option value="">Select occasion...</option>
+              <option value="Wedding">Wedding</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Anniversary">Anniversary</option>
+              <option value="Baby Shower">Baby Shower</option>
+              <option value="Festival">Festival</option>
+              <option value="Graduation">Graduation</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gold mb-2">Message for Blessers</label>
+            <textarea id="blessingMessage" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-gold focus:outline-none resize-none" placeholder="Tell people about your special occasion..."></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gold mb-2">Your Email (for notifications)</label>
+            <input type="email" id="blesserEmail" class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:border-gold focus:outline-none" readonly>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button type="button" onclick="closeBlessingModal()" class="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-colors">
+            Cancel
+          </button>
+          <button type="submit" id="createBlessingBtn" class="flex-1 px-4 py-2 bg-gold text-black rounded-lg hover:bg-yellow-400 transition-colors font-semibold">
+            Create Page
+          </button>
+        </div>
+      </form>
+
+      <!-- Success State -->
+      <div id="blessingSuccess" class="hidden">
+        <div class="text-center">
+          <div class="text-4xl mb-4">🎉</div>
+          <h3 class="text-xl font-bold text-gold mb-2">Blessing Page Created!</h3>
+          <p class="text-gray-300 mb-4">Share this link with your loved ones to receive gold blessings.</p>
+
+          <div class="bg-gray-700 p-3 rounded-lg mb-4">
+            <input type="text" id="blessingLink" readonly class="w-full bg-transparent text-gold text-sm font-mono">
+          </div>
+
+          <div class="flex gap-2 mb-4">
+            <button onclick="copyBlessingLink()" class="flex-1 px-3 py-2 bg-gold/20 text-gold rounded-lg hover:bg-gold/30 transition-colors text-sm">
+              📋 Copy Link
+            </button>
+            <button onclick="shareOnWhatsApp()" class="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition-colors text-sm">
+              📱 WhatsApp
+            </button>
+          </div>
+
+          <button onclick="closeBlessingModal()" class="w-full px-4 py-2 bg-gold text-black rounded-lg hover:bg-yellow-400 transition-colors font-semibold">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+const RAZORPAY_KEY = 'rzp_test_SMSLODO1V0KwfU' // Razorpay test key ID
+
+// Test mode flag - set to true for testing without payments
+const testMode = true; // Change to false for production
+
+// Better authentication check
+function getUser() {
+  try {
+    const userData = localStorage.getItem('glink_user')
+    console.log('Dashboard - Raw localStorage data:', userData)
+    
+    if (!userData || userData === 'null' || userData === 'undefined') {
+      console.log('Dashboard - No user data found in localStorage')
+      return null
+    }
+    
+    const user = JSON.parse(userData)
+    console.log('Dashboard - Parsed user data:', user)
+    return user
+  } catch (error) {
+    console.error('Dashboard - Error parsing user data:', error)
+    return null
+  }
+}
+
+const user = getUser()
+if (!user) {
+  console.log('Dashboard - User not logged in, redirecting to login...')
+  window.location.href = 'login.html'
+}
+
+// Show test mode banner
+if (testMode) {
+  document.getElementById('testModeBanner').style.display = 'block'
+}
+
+// Fix header immediately
+const navUser = document.getElementById('userName')
+if (navUser) navUser.textContent = user?.name || user?.email || 'User'
+
+document.getElementById('userName').textContent = user?.name || user?.email || 'User'
+// Mobile username functionality removed since navbar is simplified
+
+// Remove mobile menu functionality since navbar is now simplified
+// Mobile menu toggle functionality removed
+
+async function loadDashboard() {
+  try {
+    const user = getUser() // Use the same getUser function
+    if (!user) { 
+      console.log('loadDashboard - User not found, redirecting...')
+      window.location.href = 'login.html'; 
+      return 
+    }
+    
+    console.log('loadDashboard - Loading dashboard for user:', user.email)
+    const res = await fetch('/api/dashboard?email=' + encodeURIComponent(user.email))
+    const data = await res.json()
+    
+    console.log('Dashboard data:', data)
+    
+    if (data.success) {
+      if (document.getElementById('userName')) 
+        document.getElementById('userName').textContent = data.name
+      if (document.getElementById('goldGrams'))
+        document.getElementById('goldGrams').textContent = (data.goldGrams || 0) + 'g'
+      if (document.getElementById('goldValue'))
+        document.getElementById('goldValue').textContent = '₹' + (data.goldValueINR || 0).toLocaleString()
+      if (document.getElementById('livePrice'))
+        document.getElementById('livePrice').textContent = '₹' + (data.livePrice || 7200).toLocaleString() + '/gram'
+      if (document.getElementById('linksCreated'))
+        document.getElementById('linksCreated').textContent = data.linksCreated || 0
+      // Update GRAIL status
+      if (document.getElementById('grailStatus')) {
+        document.getElementById('grailStatus').textContent = data.grailUserId ? '✓' : '✗'
+      }
+      
+      // Transactions and profile sections moved to dedicated pages
+
+      // Recent blessings section removed from layout
+    }
+  } catch(e) {
+    console.log('Dashboard error:', e)
+  }
+}
+
+function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    localStorage.removeItem('glink_user')
+    window.location.href = 'login.html'
+  }
+}
+
+loadDashboard()
+
+// Blessing Pages Functions
+function openBlessingModal() {
+  document.getElementById('blessingModal').classList.remove('hidden');
+  document.getElementById('blessingForm').classList.remove('hidden');
+  document.getElementById('blessingSuccess').classList.add('hidden');
+  
+  // Pre-fill form with logged-in user data
+  document.getElementById('blesserName').value = user?.name || '';
+  document.getElementById('blesserEmail').value = user?.email || '';
+  
+  lucide.createIcons();
+}
+
+function closeBlessingModal() {
+  document.getElementById('blessingModal').classList.add('hidden');
+  document.getElementById('blessingForm').reset();
+}
+
+async function loadBlessingPages() {
+  try {
+    const response = await fetch(`/api/blessing/my?email=${encodeURIComponent(user.email)}`);
+    const data = await response.json();
+
+    if (data.success) {
+      renderBlessingPages(data.blessings);
+    }
+  } catch (error) {
+    console.error('Error loading blessing pages:', error);
+  }
+}
+
+function renderBlessingPages(blessings) {
+  const grid = document.getElementById('blessingPagesGrid');
+  const noBlessings = document.getElementById('noBlessings');
+
+  if (blessings.length === 0) {
+    grid.style.display = 'none';
+    noBlessings.style.display = 'block';
+    return;
+  }
+
+  grid.style.display = 'block';
+  noBlessings.style.display = 'none';
+
+  grid.innerHTML = blessings.map(page => `
+    <div class="blessing-card">
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <h4 class="blessing-owner">${page.name}</h4>
+          <p class="blessing-event">${page.occasion}</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="viewBlessing('${page.id}')" class="view-btn" title="View Page">
+            👁️ View
+          </button>
+          <button onclick="shareBlessing('${page.id}', '${page.name}', '${page.occasion}')" class="share-btn" title="Share">
+            📤 Share
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <div class="text-center">
+          <div class="blessing-gold">${page.total_gold.toFixed(3)}g</div>
+          <div class="blessing-event">Gold</div>
+        </div>
+        <div class="text-center">
+          <div class="blessing-gold">₹${Math.round(page.total_inr)}</div>
+          <div class="blessing-event">Value</div>
+        </div>
+        <div class="text-center">
+          <div class="blessing-gold">${page.blesser_count}</div>
+          <div class="blessing-event">Blessers</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  lucide.createIcons();
+}
+
+function viewBlessing(id) {
+  window.open(`blessing.html?id=${id}`, '_blank');
+}
+
+function shareBlessing(id, name, occasion) {
+  const link = `${window.location.origin}/blessing.html?id=${id}`;
+  const text = `Bless ${name} on their ${occasion}! Send gold blessings here: ${link}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(whatsappUrl, '_blank');
+}
+
+// Blessing Form Submission
+document.getElementById('blessingForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const createBtn = document.getElementById('createBlessingBtn');
+  createBtn.disabled = true;
+  createBtn.textContent = 'Creating...';
+
+  try {
+    // Use logged-in user's name and email
+    const userName = user?.name || document.getElementById('blesserName').value;
+    const userEmail = user?.email || document.getElementById('blesserEmail').value;
+
+    const response = await fetch('/api/blessing/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: userName,
+        occasion: document.getElementById('blessingOccasion').value,
+        message: document.getElementById('blessingMessage').value,
+        email: userEmail
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      document.getElementById('blessingLink').value = data.link;
+      document.getElementById('blessingForm').classList.add('hidden');
+      document.getElementById('blessingSuccess').classList.remove('hidden');
+
+      // Reload blessing pages
+      loadBlessingPages();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('An error occurred. Please try again.');
+  } finally {
+    createBtn.disabled = false;
+    createBtn.textContent = 'Create Page';
+  }
+});
+
+// Share functions
+function copyBlessingLink() {
+  const link = document.getElementById('blessingLink').value;
+  navigator.clipboard.writeText(link).then(() => {
+    alert('Link copied to clipboard!');
+  });
+}
+
+function shareOnWhatsApp() {
+  const link = document.getElementById('blessingLink').value;
+  const text = `Check out my blessing page! ${link}`;
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(whatsappUrl, '_blank');
+}
+
+// Load blessing pages on dashboard load
+document.addEventListener('DOMContentLoaded', function() {
+  loadBlessingPages();
+});
+
+async function openRazorpay(amount) {
+  try {
+    const res = await fetch('/api/payment/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    })
+    const order = await res.json()
+    
+    if (!res.ok) {
+      alert('Error creating order: ' + order.error)
+      return
+    }
+    
+    const options = {
+      key: RAZORPAY_KEY,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'G-Link Gold',
+      description: 'Payment for Gold',
+      order_id: order.id,
+      handler: async function (response) {
+        alert('Payment successful: ' + response.razorpay_payment_id)
+        try {
+          const res = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(response)
+          })
+          const data = await res.json()
+          if (data.success) {
+            alert('Payment verified!')
+          } else {
+            alert('Payment verification failed')
+          }
+        } catch(e) {
+          alert('Verification error: ' + e.message)
+        }
+      },
+      prefill: {
+        name: user.name,
+        email: user.email
+      }
+    }
+    const rzp = new Razorpay(options)
+    rzp.open()
+  } catch(e) {
+    console.error(e)
+    alert('Error: ' + e.message)
+  }
+}
+</script>
+</body>
+</html>

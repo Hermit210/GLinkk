@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>G-Link Blessing</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#0a0a0a; color:#fff; font-family:Arial,sans-serif; min-height:100vh; }
+    .header { background:#111; border-bottom:1px solid #D4AF37; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .logo { color:#D4AF37; font-size:24px; font-weight:bold; }
+    .container { max-width:600px; margin:0 auto; padding:24px 16px; }
+    .card { background:#111; border:1px solid #333; border-radius:16px; padding:24px; margin-bottom:20px; }
+    .gold { color:#D4AF37; }
+    input, select, textarea { width:100%; padding:12px 16px; margin-top:8px; background:#1a1a1a; border:1px solid #333; border-radius:10px; color:#fff; font-size:15px; outline:none; }
+    input:focus, select:focus, textarea:focus { border-color:#D4AF37; }
+    select option { background:#1a1a1a; }
+    .btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:12px; }
+    .btn-gold { background:#D4AF37; color:#000; }
+    .btn-outline { background:transparent; color:#D4AF37; border:1px solid #D4AF37; }
+    .amount-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
+    .amount-btn { padding:12px; background:#1a1a1a; border:1px solid #333; border-radius:10px; color:#fff; cursor:pointer; font-size:14px; font-weight:bold; text-align:center; transition:all 0.2s; }
+    .amount-btn.selected { background:#2a2000; border-color:#D4AF37; color:#D4AF37; }
+    .blessing-entry { background:#1a1a1a; border:1px solid #222; border-radius:12px; padding:16px; margin-bottom:10px; }
+    .badge { display:inline-block; background:#2a2000; color:#D4AF37; padding:4px 12px; border-radius:20px; font-size:12px; }
+    .share-row { display:flex; gap:10px; margin-top:12px; }
+    .share-btn { flex:1; padding:12px; border:none; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; }
+    .success-box { background:#0a2000; border:2px solid #D4AF37; border-radius:16px; padding:24px; text-align:center; display:none; margin-bottom:20px; }
+    label { color:#888; font-size:14px; display:block; margin-top:12px; }
+    .powered { text-align:center; color:#444; font-size:11px; margin-top:24px; margin-bottom:40px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">🪙 G-Link</span>
+  <a href="/dashboard.html" style="color:#888;text-decoration:none;font-size:14px">Dashboard</a>
+</div>
+
+<div class="container">
+
+  <!-- CREATE SECTION -->
+  <div id="createSection">
+    <div class="card">
+      <h2 class="gold" style="margin-bottom:4px">Create Blessing Page</h2>
+      <p style="color:#888;font-size:14px;margin-bottom:16px">Create your personal gold blessing page and share it!</p>
+      
+      <label>Your Name *</label>
+      <input type="text" id="createName" placeholder="Enter your name">
+      
+      <label>Occasion *</label>
+      <select id="createOccasion">
+        <option value="">Select occasion</option>
+        <option value="Wedding">💍 Wedding</option>
+        <option value="Birthday">🎂 Birthday</option>
+        <option value="Anniversary">❤️ Anniversary</option>
+        <option value="Baby Shower">👶 Baby Shower</option>
+        <option value="Festival">🎉 Festival</option>
+        <option value="Graduation">🎓 Graduation</option>
+        <option value="Other">✨ Other</option>
+      </select>
+      
+      <label>Message for blessers</label>
+      <textarea id="createMessage" rows="3" placeholder="e.g. Bless me on my wedding day!"></textarea>
+      
+      <label>Your Email (for notifications)</label>
+      <input type="email" id="createEmail" placeholder="your@email.com">
+      
+      <button class="btn btn-gold" onclick="createBlessingPage()">🪙 Create My Blessing Page</button>
+    </div>
+    
+    <div id="createSuccess" class="success-box">
+      <h2 class="gold">🎉 Blessing Page Created!</h2>
+      <p style="color:#888;margin:8px 0 16px">Share this link with family and friends</p>
+      <div style="background:#111;border:1px solid #D4AF37;border-radius:10px;padding:12px;margin-bottom:12px">
+        <p id="createdLinkText" style="color:#D4AF37;word-break:break-all;font-size:14px"></p>
+      </div>
+      <div class="share-row">
+        <button class="share-btn" onclick="copyCreatedLink()" style="background:#333;color:#fff" id="copyCreatedBtn">📋 Copy Link</button>
+        <a id="whatsappCreatedBtn" href="#" target="_blank" class="share-btn" style="background:#25D366;color:#fff">📱 WhatsApp</a>
+      </div>
+      <button class="btn btn-outline" onclick="viewCreatedPage()" style="margin-top:12px">View My Blessing Page →</button>
+    </div>
+  </div>
+
+  <!-- BLESSING VIEW SECTION -->
+  <div id="blessingSection" style="display:none;">
+    
+    <div class="card" style="text-align:center">
+      <span class="badge" id="occasionBadge">Occasion</span>
+      <h1 class="gold" style="font-size:28px;margin:12px 0 4px" id="blessingName">Loading...</h1>
+      <p style="color:#888" id="blessingMessage">Loading...</p>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:20px">
+        <div>
+          <p class="gold" style="font-size:22px;font-weight:bold" id="totalGold">0g</p>
+          <p style="color:#666;font-size:12px">Gold Received</p>
+        </div>
+        <div>
+          <p class="gold" style="font-size:22px;font-weight:bold" id="totalInr">₹0</p>
+          <p style="color:#666;font-size:12px">Total Value</p>
+        </div>
+        <div>
+          <p class="gold" style="font-size:22px;font-weight:bold" id="blesserCount">0</p>
+          <p style="color:#666;font-size:12px">Blessers</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3 class="gold" style="margin-bottom:16px">Share This Page</h3>
+      <div class="share-row">
+        <button class="share-btn" onclick="copyPageLink()" style="background:#333;color:#fff" id="copyBtn">📋 Copy Link</button>
+        <a id="whatsappBtn" href="#" target="_blank" class="share-btn" style="background:#25D366;color:#fff">📱 WhatsApp</a>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3 class="gold" style="margin-bottom:16px">Send Gold Blessing 🪙</h3>
+      
+      <p style="color:#888;font-size:13px">Select amount:</p>
+      <div class="amount-grid">
+        <div class="amount-btn" data-amount="100" onclick="selectAmount(this)">₹100</div>
+        <div class="amount-btn" data-amount="500" onclick="selectAmount(this)">₹500</div>
+        <div class="amount-btn" data-amount="1000" onclick="selectAmount(this)">₹1000</div>
+        <div class="amount-btn" data-amount="2100" onclick="selectAmount(this)">₹2100</div>
+        <div class="amount-btn" data-amount="5100" onclick="selectAmount(this)">₹5100</div>
+        <div class="amount-btn" data-amount="11000" onclick="selectAmount(this)">₹11000</div>
+      </div>
+      
+      <label>Custom Amount (₹)</label>
+      <input type="number" id="customAmount" placeholder="Enter custom amount" min="100" oninput="clearSelection()">
+      
+      <p id="goldPreview" style="color:#555;font-size:12px;margin-top:8px"></p>
+      
+      <label>Your Name *</label>
+      <input type="text" id="blesserNameInput" placeholder="Enter your name">
+      
+      <label>Blessing Message (optional)</label>
+      <textarea id="blesserMsgInput" rows="2" placeholder="Write a blessing message..."></textarea>
+      
+      <button class="btn btn-gold" id="sendBtn" onclick="initPayment()">💳 Pay & Send Blessing</button>
+    </div>
+    
+    <div id="successSection" class="success-box">
+      <h2 class="gold">🎉 Blessing Sent!</h2>
+      <p style="color:#888;margin:8px 0">You sent</p>
+      <p class="gold" style="font-size:36px;font-weight:bold" id="successGold">0g</p>
+      <p style="color:#888">of real gold on Solana blockchain!</p>
+      <p style="color:#555;font-size:13px;margin-top:8px">Total blessings: <span class="gold" id="successTotal">0g</span></p>
+    </div>
+    
+    <div class="card">
+      <h3 class="gold" style="margin-bottom:16px">Blessings Received ❤️</h3>
+      <div id="blessingsList"><p style="color:#666;text-align:center">Loading...</p></div>
+    </div>
+    
+  </div>
+
+  <p class="powered">Powered by G-Link | Oro GRAIL | Solana Blockchain</p>
+</div>
+
+<script>
+  // GET ID FROM URL - THIS IS THE KEY FIX
+  const urlParams = new URLSearchParams(window.location.search)
+  const blessingId = urlParams.get('id')
+  let liveGoldPrice = 7200
+  let blessingData = null
+  let createdPageLink = ''
+
+  // RUN IMMEDIATELY ON PAGE LOAD
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded')
+    console.log('URL:', window.location.href)
+    console.log('Blessing ID:', blessingId)
+    
+    if (blessingId && blessingId.length > 0) {
+      // SHOW BLESSING VIEW
+      console.log('Showing blessing page for ID:', blessingId)
+      document.getElementById('createSection').style.display = 'none'
+      document.getElementById('blessingSection').style.display = 'block'
+      loadBlessingPage()
+    } else {
+      // SHOW CREATE FORM
+      console.log('Showing create form')
+      document.getElementById('createSection').style.display = 'block'
+      document.getElementById('blessingSection').style.display = 'none'
+      // Pre-fill from logged in user
+      try {
+        const user = JSON.parse(localStorage.getItem('glink_user') || '{}')
+        if (user.name) document.getElementById('createName').value = user.name
+        if (user.email) document.getElementById('createEmail').value = user.email
+      } catch(e) {}
+    }
+  })
+
+  async function loadBlessingPage() {
+    try {
+      console.log('Fetching blessing:', blessingId)
+      const res = await fetch('/api/blessing/' + blessingId)
+      const data = await res.json()
+      console.log('Blessing data:', data)
+      
+      if (!data.success) {
+        document.getElementById('blessingSection').innerHTML = 
+          '<div style="text-align:center;padding:40px">' +
+          '<p style="color:#D4AF37;font-size:18px">Blessing page not found!</p>' +
+          '<a href="/blessing.html" style="color:#888;margin-top:12px;display:block">Create one →</a>' +
+          '</div>'
+        return
+      }
+      
+      blessingData = data.blessing
+      liveGoldPrice = data.livePrice || 7200
+      const entries = data.entries || []
+      
+      document.getElementById('blessingName').textContent = blessingData.name
+      document.getElementById('occasionBadge').textContent = blessingData.occasion
+      document.getElementById('blessingMessage').textContent = blessingData.message || 'Send gold blessings!'
+      document.getElementById('totalGold').textContent = blessingData.total_gold + 'g'
+      document.getElementById('totalInr').textContent = '₹' + Math.round(blessingData.total_inr)
+      document.getElementById('blesserCount').textContent = entries.length
+      document.title = 'Bless ' + blessingData.name + ' - G-Link'
+      
+      // Share buttons
+      const pageUrl = window.location.href
+      document.getElementById('whatsappBtn').href = 
+        'https://wa.me/?text=' + encodeURIComponent(
+          '🪙 Bless ' + blessingData.name + ' on their ' + blessingData.occasion + '!\n' +
+          'Send real gold here: ' + pageUrl
+        )
+      
+      // Entries list
+      const list = document.getElementById('blessingsList')
+      if (entries.length === 0) {
+        list.innerHTML = '<p style="color:#555;text-align:center;padding:20px">Be the first to bless! 🪙</p>'
+      } else {
+        list.innerHTML = entries.map(e => `
+          <div class="blessing-entry">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-weight:bold">${e.blesser_name}</span>
+              <span class="gold;font-weight:bold">${e.gold_grams}g Gold</span>
+            </div>
+            ${e.blesser_message ? `<p style="color:#888;font-style:italic;margin-top:6px">"${e.blesser_message}"</p>` : ''}
+            <p style="color:#555;font-size:12px;margin-top:4px">₹${e.amount_inr}</p>
+          </div>
+        `).join('')
+      }
+      
+    } catch(e) {
+      console.log('Load error:', e.message)
+    }
+  }
+
+  function selectAmount(btn) {
+    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'))
+    btn.classList.add('selected')
+    document.getElementById('customAmount').value = ''
+    updatePreview(parseInt(btn.dataset.amount))
+  }
+
+  function clearSelection() {
+    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'))
+    const val = document.getElementById('customAmount').value
+    if (val) updatePreview(parseInt(val))
+  }
+
+  function updatePreview(amount) {
+    if (!amount) return
+    const grams = (amount / liveGoldPrice).toFixed(4)
+    document.getElementById('goldPreview').textContent = '≈ ' + grams + 'g gold at ₹' + liveGoldPrice + '/gram'
+  }
+
+  function getAmount() {
+    const sel = document.querySelector('.amount-btn.selected')
+    if (sel) return parseInt(sel.dataset.amount)
+    const custom = document.getElementById('customAmount').value
+    return custom ? parseInt(custom) : 0
+  }
+
+  function copyPageLink() {
+    navigator.clipboard.writeText(window.location.href)
+    document.getElementById('copyBtn').textContent = '✅ Copied!'
+    setTimeout(() => document.getElementById('copyBtn').textContent = '📋 Copy Link', 2000)
+  }
+
+  async function initPayment() {
+    const amount = getAmount()
+    const name = document.getElementById('blesserNameInput').value.trim()
+    if (!amount || amount < 100) { alert('Minimum ₹100'); return }
+    if (!name) { alert('Please enter your name'); return }
+    
+    try {
+      const orderRes = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount_inr: amount })
+      })
+      const orderData = await orderRes.json()
+      if (!orderData.success && !orderData.orderId) throw new Error(orderData.error || 'Order failed')
+      
+      var options = {
+        key: orderData.key,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'G-Link Blessing',
+        description: 'Gold Blessing for ' + (blessingData?.name || ''),
+        order_id: orderData.orderId,
+        prefill: { name: name },
+        theme: { color: '#D4AF37' },
+        handler: async function(response) {
+          await sendBlessing(response.razorpay_payment_id, amount, name)
+        }
+      }
+      new Razorpay(options).open()
+    } catch(e) {
+      alert('Payment error: ' + e.message)
+    }
+  }
+
+  async function sendBlessing(paymentId, amount, name) {
+    const msg = document.getElementById('blesserMsgInput').value
+    const btn = document.getElementById('sendBtn')
+    btn.textContent = '⏳ Sending...'
+    btn.disabled = true
+    
+    try {
+      const res = await fetch('/api/blessing/' + blessingId + '/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blesserName: name, blesserMessage: msg, amount, paymentId })
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        document.getElementById('successSection').style.display = 'block'
+        document.getElementById('successGold').textContent = data.goldGrams + 'g'
+        document.getElementById('successTotal').textContent = data.totalGold + 'g'
+        document.getElementById('successSection').scrollIntoView({ behavior: 'smooth' })
+        await loadBlessingPage()
+      } else {
+        alert('Error: ' + data.error)
+      }
+    } catch(e) {
+      alert('Error: ' + e.message)
+    } finally {
+      btn.textContent = '💳 Pay & Send Blessing'
+      btn.disabled = false
+    }
+  }
+
+  async function createBlessingPage() {
+    const name = document.getElementById('createName').value.trim()
+    const occasion = document.getElementById('createOccasion').value
+    const message = document.getElementById('createMessage').value.trim()
+    const email = document.getElementById('createEmail').value.trim()
+    
+    if (!name) { alert('Please enter your name'); return }
+    if (!occasion) { alert('Please select an occasion'); return }
+    
+    const btn = event.target
+    btn.textContent = 'Creating...'
+    btn.disabled = true
+    
+    try {
+      const res = await fetch('/api/blessing/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, occasion, message, email })
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        createdPageLink = data.link
+        document.getElementById('createdLinkText').textContent = data.link
+        document.getElementById('whatsappCreatedBtn').href = 
+          'https://wa.me/?text=' + encodeURIComponent(
+            '🪙 Bless ' + name + ' on their ' + occasion + '!\nSend real gold here: ' + data.link
+          )
+        document.getElementById('createSuccess').style.display = 'block'
+        document.getElementById('createSuccess').scrollIntoView({ behavior: 'smooth' })
+      } else {
+        alert('Error: ' + data.error)
+      }
+    } catch(e) {
+      alert('Error: ' + e.message)
+    } finally {
+      btn.textContent = '🪙 Create My Blessing Page'
+      btn.disabled = false
+    }
+  }
+
+  function copyCreatedLink() {
+    navigator.clipboard.writeText(createdPageLink)
+    document.getElementById('copyCreatedBtn').textContent = '✅ Copied!'
+    setTimeout(() => document.getElementById('copyCreatedBtn').textContent = '📋 Copy Link', 2000)
+  }
+
+  function viewCreatedPage() {
+    window.open(createdPageLink, '_blank')
+  }
+</script>
+
+</body>
+</html>

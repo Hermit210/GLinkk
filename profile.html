@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - G-Link</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="enhanced-styles.css">
+  <style>
+    :root {
+      --gold-primary: #D4AF37;
+      --gold-light: #F4D03F;
+      --gold-dark: #B8941E;
+      --bg-dark: #0a0a0a;
+      --bg-card: #161616;
+      --bg-elevated: #1f1f1f;
+      --text-light: #f0f0f0;
+      --text-muted: #a0a0a0;
+      --border-gold: rgba(212, 175, 55, 0.3);
+      --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .bg-site { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); }
+    .text-gold { color: var(--gold-primary); }
+    .bg-gold { background: var(--gold-primary); }
+    .hover\:bg-gold:hover { background: var(--gold-dark); }
+    .text-white { color: #fff; }
+    .text-gray-400 { color: var(--text-muted); }
+    .text-red-400 { color: #f44336; }
+    .text-green-400 { color: #4CAF50; }
+    .text-blue-400 { color: #64B5F6; }
+    .bg-gray-700 { background: #333; }
+    .bg-gray-800 { background: #1a1a1a; }
+    .bg-gray-600 { background: #555; }
+    .hover\:bg-gray-500:hover { background: #666; }
+    .border-gray-600 { border-color: #333; }
+    .focus\:border-gold:focus { border-color: var(--gold-primary); }
+    .card-gold { background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); transition: var(--transition); backdrop-filter: blur(10px); }
+    .card-gold:hover { transform: translateY(-5px); border-color: var(--gold-light); box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4); }
+    .btn-gold { background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%); color: #000; font-weight: 700; transition: var(--transition); }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
+    .btn-outline-gold { background: transparent; border: 2px solid var(--gold-primary); color: var(--gold-primary); font-weight: 700; transition: var(--transition); }
+    .btn-outline-gold:hover { background: var(--gold-primary); color: #000; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2); }
+    
+    .navbar { background: var(--bg-card); border-bottom: 1px solid var(--border-gold); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { color: var(--gold-primary); font-size: 20px; font-weight: 700; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .user-name { color: var(--gold-primary); font-size: 14px; }
+    .btn-logout { padding: 8px 16px; background: transparent; color: var(--gold-primary); border: 1px solid var(--border-gold); border-radius: 8px; cursor: pointer; font-size: 14px; transition: var(--transition); }
+    .btn-logout:hover { background: var(--gold-primary); color: #000; }
+    .container { 
+      max-width: 1000px; 
+      margin: 0 auto; 
+      padding: 120px 24px 40px; 
+    }
+    .section { 
+      background: var(--bg-card); 
+      border: 2px solid var(--border); 
+      border-radius: 20px; 
+      padding: 40px; 
+      margin-bottom: 40px;
+      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
+      min-height: auto;
+    }
+    .section h3 { 
+      color: var(--gold-primary); 
+      margin-bottom: 24px; 
+      font-size: 28px;
+      font-weight: 800;
+      text-shadow: 0 2px 15px rgba(255, 215, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .tx-item { 
+      padding: 20px 0; 
+      border-bottom: 1px solid var(--border);
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      transition: var(--transition);
+    }
+    
+    .tx-item:hover {
+      background: rgba(255, 215, 0, 0.05);
+      padding-left: 16px;
+      padding-right: 16px;
+      margin: 0 -16px;
+      border-radius: 12px;
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-type { 
+      color: var(--gold-primary); 
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+    .tx-amount { 
+      color: #fff; 
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .tx-date { 
+      color: var(--text-muted); 
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .profile-card { 
+      background: var(--bg-card); 
+      border: 2px solid var(--border); 
+      border-radius: 20px; 
+      padding: 32px; 
+      margin-bottom: 24px; 
+      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
+      min-height: auto;
+    }
+    .profile-card h3 { 
+      color: var(--gold-primary); 
+      margin-bottom: 20px; 
+      font-size: 24px;
+      font-weight: 800;
+      text-shadow: 0 2px 15px rgba(255, 215, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .profile-row { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 16px 0; 
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    
+    .profile-row:hover {
+      background: rgba(255, 215, 0, 0.05);
+      padding-left: 16px;
+      padding-right: 16px;
+      margin: 0 -16px;
+      border-radius: 12px;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-label { 
+      color: var(--text-muted); 
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .profile-value { 
+      color: #fff; 
+      font-size: 16px;
+      font-weight: 600;
+      text-align: right;
+    }
+    .animate-fade-in { animation: fadeIn 0.8s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="text-white" style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #0a0a0a 100%); min-height: 100vh;">
+  <header class="bg-card border-b border-gold py-4 px-6 shadow-lg" style="background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(212, 175, 55, 0.3);">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <a href="index.html" class="flex items-center text-gold font-bold text-xl hover:text-gold-light transition">
+        <img src="logo.svg" alt="G-Link Logo" class="w-8 h-8 mr-2">
+        <span class="hidden sm:inline">G-Link</span>
+      </a>
+      <nav class="hidden md:flex space-x-6 lg:space-x-8 items-center">
+        <a href="create.html" class="flex items-center text-white hover:text-gold transition">
+          <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+          <span class="hidden lg:inline">Create</span>
+          <span class="lg:hidden">New</span>
+        </a>
+        <a href="dashboard.html" class="flex items-center text-white hover:text-gold transition">
+          <i data-lucide="home" class="w-5 h-5 mr-2"></i>
+          Dashboard
+        </a>
+        <span class="text-gold text-sm" id="userName">Loading...</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </nav>
+      
+      <!-- Mobile Menu Button -->
+      <button id="mobileMenuBtn" class="md:hidden text-gold hover:text-gold-light transition">
+        <i data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gold pt-4">
+      <nav class="flex flex-col space-y-3">
+        <span class="text-gold text-sm py-2" id="userNameMobile">Loading...</span>
+        <a href="create.html" class="flex items-center text-white hover:text-gold transition py-2">
+          <i data-lucide="plus" class="w-5 h-5 mr-3"></i>
+          Create Gold Link
+        </a>
+        <a href="dashboard.html" class="flex items-center text-white hover:text-gold transition py-2">
+          <i data-lucide="home" class="w-5 h-5 mr-3"></i>
+          Dashboard
+        </a>
+        <button onclick="logout()" class="flex items-center text-white hover:text-gold transition py-2">
+          <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+          Logout
+        </button>
+      </nav>
+    </div>
+  </header>
+
+<div class="container">
+  <div class="profile-card animate-fade-in">
+    <h3>
+      <i data-lucide="user" style="width: 24px; height: 24px;"></i>
+      My Profile
+    </h3>
+    <div class="profile-row">
+      <span class="profile-label">Name</span>
+      <span class="profile-value" id="profileName">-</span>
+    </div>
+    <div class="profile-row">
+      <span class="profile-label">Email</span>
+      <span class="profile-value" id="profileEmail">-</span>
+    </div>
+    <div class="profile-row">
+      <span class="profile-label">Phone</span>
+      <span class="profile-value" id="profilePhone">-</span>
+    </div>
+    <div class="profile-row">
+      <span class="profile-label">GRAIL User ID</span>
+      <span class="profile-value" id="grailId" style="font-size:11px;word-break:break-all">-</span>
+    </div>
+  </div>
+
+  <div class="section animate-fade-in" style="animation-delay: 0.2s">
+    <h3>Recent Transactions</h3>
+    <div id="transactions">
+      <p style="color:var(--text-muted)">Loading...</p>
+    </div>
+  </div>
+
+  <div class="section animate-fade-in" style="animation-delay: 0.4s">
+    <h3>My Blessing Pages</h3>
+    <div id="myBlessingPages">
+      <p style="color:var(--text-muted)">Loading your blessing pages...</p>
+    </div>
+  </div>
+
+  <div class="section animate-fade-in" style="animation-delay: 0.6s">
+    <h3>Recent Blessings</h3>
+    <div id="recentBlessings">
+      <p style="color:var(--text-muted)">Loading...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+lucide.createIcons();
+
+// Better authentication check
+function getUser() {
+  try {
+    const userData = localStorage.getItem('glink_user')
+    console.log('Raw localStorage data:', userData)
+    
+    if (!userData || userData === 'null' || userData === 'undefined') {
+      console.log('No user data found in localStorage')
+      return null
+    }
+    
+    const user = JSON.parse(userData)
+    console.log('Parsed user data:', user)
+    return user
+  } catch (error) {
+    console.error('Error parsing user data:', error)
+    return null
+  }
+}
+
+const user = getUser()
+if (!user) {
+  console.log('User not logged in, redirecting to login...')
+  window.location.href = 'login.html'
+}
+
+document.getElementById('userName').textContent = 'Hi ' + (user?.name || '')
+const userNameMobile = document.getElementById('userNameMobile')
+if (userNameMobile) userNameMobile.textContent = 'Hi ' + (user?.name || '')
+
+// Mobile menu toggle
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+if (mobileMenuBtn && mobileMenu) {
+  mobileMenuBtn.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden');
+    const icon = mobileMenuBtn.querySelector('i');
+    if (mobileMenu.classList.contains('hidden')) {
+      icon.setAttribute('data-lucide', 'menu');
+    } else {
+      icon.setAttribute('data-lucide', 'x');
+    }
+    lucide.createIcons();
+  });
+}
+document.getElementById('profileName').textContent = user?.name || '-'
+document.getElementById('profileEmail').textContent = user?.email || '-'
+document.getElementById('profilePhone').textContent = user?.phone || '-'
+document.getElementById('grailId').textContent = user?.grail_user_id || '-'
+
+async function loadProfile() {
+  try {
+    const res = await fetch('/api/dashboard?email=' + user.email)
+    const data = await res.json()
+    if (data.success) {
+      if (data.grailUserId) {
+        document.getElementById('grailId').textContent = data.grailUserId
+        const updated = {...user, grail_user_id: data.grailUserId}
+        localStorage.setItem('glink_user', JSON.stringify(updated))
+      }
+      const txDiv = document.getElementById('transactions')
+      if (!data.transactions.length) {
+        txDiv.innerHTML = '<p style="color:var(--text-muted)">No transactions yet. Send your first gold!</p>'
+      } else {
+        txDiv.innerHTML = data.transactions.map(t => 
+          '<div class="tx-item">' +
+          '<div><div class="tx-type">' + t.type.replace(/_/g,' ') + '</div>' +
+          '<div class="tx-date">' + new Date(t.created_at).toLocaleDateString('en-IN') + '</div></div>' +
+          '<div><div class="tx-amount">' + t.gold_grams + 'g</div>' +
+          '<div style="color:var(--text-muted);font-size:12px">₹' + t.amount_inr + '</div></div>' +
+          '</div>'
+        ).join('')
+      }
+    }
+  } catch(e) {
+    console.log('Profile error:', e)
+  }
+  
+  // Load blessing pages
+  try {
+    const blessRes = await fetch('/api/blessing/my?email=' + user.email)
+    const blessData = await blessRes.json()
+    const blessDiv = document.getElementById('myBlessingPages')
+    if (!blessData.success || !blessData.blessings.length) {
+      blessDiv.innerHTML = '<p style="color:var(--text-muted)">No blessing pages created yet.</p>'
+    } else {
+      blessDiv.innerHTML = blessData.blessings.map(page => `
+        <div class="tx-item">
+          <div>
+            <div class="tx-type">${page.occasion} - ${page.name}</div>
+            <div class="tx-date">${new Date(page.created_at).toLocaleDateString('en-IN')}</div>
+          </div>
+          <div>
+            <div class="tx-amount">${page.total_gold}g</div>
+            <div style="color:var(--text-muted);font-size:12px">₹${Math.round(page.total_inr)} from ${page.blesser_count} blessers</div>
+            <div style="margin-top:8px">
+              <a href="/blessing.html?id=${page.id}" onclick="debugViewClick('${page.id}', event)" target="_blank" style="color:var(--gold-primary);font-size:12px;text-decoration:none">View Page →</a>
+            </div>
+          </div>
+        </div>
+      `).join('')
+    }
+  } catch(e) {
+    console.log('Blessing pages load error:', e)
+  }
+  
+  // Load recent blessings sent
+  try {
+    const blessRes = await fetch('/api/registry/blessing')
+    const blessData = await blessRes.json()
+    const userBlessings = blessData.gifts.filter(g => g.email === user.email).slice(-5)
+    const blessDiv = document.getElementById('recentBlessings')
+    if (!userBlessings.length) {
+      blessDiv.innerHTML = '<p style="color:var(--text-muted)">No blessings sent yet.</p>'
+    } else {
+      blessDiv.innerHTML = userBlessings.map(b => 
+        '<div class="tx-item">' +
+        '<div><div class="tx-type">Blessed ' + b.registry_slug + '</div>' +
+        '<div class="tx-date">' + new Date(b.created_at).toLocaleDateString('en-IN') + '</div></div>' +
+        '<div><div class="tx-amount">' + b.gold_grams + 'g</div>' +
+        '<div style="color:var(--text-muted);font-size:12px">₹' + b.amount_inr + '</div></div>' +
+        '</div>'
+      ).join('')
+    }
+  } catch(e) {
+    console.log('Blessings load error:', e)
+  }
+}
+
+function logout() {
+  console.log('Logout button clicked')
+  console.log('Current user before logout:', user)
+  
+  // Confirm logout
+  if (confirm('Are you sure you want to logout?')) {
+    console.log('User confirmed logout')
+    localStorage.removeItem('glink_user')
+    localStorage.removeItem('glink_wallet')
+    localStorage.removeItem('glink_wallet_name')
+    console.log('LocalStorage cleared, redirecting to login...')
+    window.location.href = 'login.html'
+  } else {
+    console.log('User cancelled logout')
+  }
+}
+
+// Debug function for blessing page clicks
+function debugBlessingClick(pageId, event) {
+  console.log('=== BLESSING PAGE CLICK DEBUG ===');
+  console.log('Page ID clicked:', pageId);
+  console.log('Event:', event);
+  console.log('Current user:', user);
+  console.log('Current localStorage:', localStorage.getItem('glink_user'));
+  
+  // Log the URL that will be opened
+  const blessingUrl = `/blessing.html?id=${pageId}`;
+  console.log('Blessing URL:', blessingUrl);
+  console.log('Full URL:', window.location.origin + blessingUrl);
+  
+  // Show user feedback
+  alert(`Opening blessing page:\n\nID: ${pageId}\nURL: ${window.location.origin + blessingUrl}\n\nCheck console for debugging info.`);
+  
+  // Allow normal navigation
+  return true;
+}
+
+loadProfile()
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blessing URL Test - G-Link</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: #fff; }
+        .test-box { background: #2a2a2a; padding: 20px; border: 1px solid #444; margin: 10px 0; border-radius: 8px; }
+        .url-display { background: #1a1a1a; padding: 10px; border: 1px solid #666; border-radius: 4px; font-family: monospace; word-break: break-all; margin: 10px 0; }
+        .test-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .test-btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔗 Blessing URL Test</h1>
+    
+    <div class="test-box">
+        <h3>Test Your Blessing Page</h3>
+        
+        <div>
+            <label>Enter Blessing ID:</label>
+            <input type="text" id="blessingIdInput" placeholder="e.g., Ee5sVnzls1" style="width: 100%; padding: 10px; margin: 10px 0;">
+        </div>
+        
+        <div>
+            <button class="test-btn" onclick="testBlessingPage()">Test Blessing Page</button>
+            <button class="test-btn" onclick="testDirectURL()">Open Direct URL</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+    
+    <script>
+        function testBlessingPage() {
+            const blessingId = document.getElementById('blessingIdInput').value.trim();
+            if (!blessingId) {
+                alert('Please enter a blessing ID');
+                return;
+            }
+            
+            const url = `/blessing.html?id=${blessingId}`;
+            const fullUrl = window.location.origin + url;
+            
+            document.getElementById('results').innerHTML = `
+                <h4>Testing URL:</h4>
+                <div class="url-display">${fullUrl}</div>
+                
+                <h4>Actions:</h4>
+                <button class="test-btn" onclick="window.open('${fullUrl}', '_blank')">Open in New Tab</button>
+                <button class="test-btn" onclick="window.open('${fullUrl}', 'popup', 'width=800,height=600')">Open in Popup</button>
+                <button class="test-btn" onclick="window.location.href='${fullUrl}'">Navigate Directly</button>
+            `;
+        }
+        
+        function testDirectURL() {
+            const blessingId = document.getElementById('blessingIdInput').value.trim();
+            if (!blessingId) {
+                alert('Please enter a blessing ID');
+                return;
+            }
+            
+            // Test with different URL formats
+            const urls = [
+                `/blessing.html?id=${blessingId}`,
+                `./blessing.html?id=${blessingId}`,
+                `blessing.html?id=${blessingId}`,
+                `http://localhost:3000/blessing.html?id=${blessingId}`
+            ];
+            
+            let html = '<h4>Testing Different URL Formats:</h4>';
+            urls.forEach((url, index) => {
+                const fullUrl = window.location.origin + '/' + url.replace(/^\//, '');
+                html += `
+                    <div style="margin: 10px 0; padding: 10px; background: #333; border-radius: 4px;">
+                        <strong>Format ${index + 1}:</strong><br>
+                        <div class="url-display">${url}</div><br>
+                        <div class="url-display">${fullUrl}</div><br>
+                        <button class="test-btn" onclick="window.open('${fullUrl}', '_blank')">Test</button>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('results').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

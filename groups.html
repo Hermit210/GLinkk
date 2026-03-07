@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gold Groups - G-Link</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #0a0a0a 100%); font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; color: #fff; }
+.header { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px); border-bottom: 2px solid rgba(212, 175, 55, 0.4); padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); height: 70px; }
+.logo { color: #D4AF37; font-size: 28px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 12px; }
+.logo img { width: 40px; height: 40px; filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.3)); }
+.header-nav { display: flex; gap: 24px; align-items: center; }
+.header-nav a { color: #D4AF37; text-decoration: none; font-size: 16px; font-weight: 500; padding: 10px 20px; border-radius: 10px; transition: all 0.3s; border: 1px solid transparent; }
+.header-nav a:hover { background: rgba(212, 175, 55, 0.15); border-color: rgba(212, 175, 55, 0.3); transform: translateY(-1px); }
+.user-info { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); }
+.user-info span { color: #FFD700; font-size: 14px; font-weight: 500; }
+.btn-logout { background: rgba(244, 67, 54, 0.2); color: #ff6b6b; border: 1px solid rgba(244, 67, 54, 0.3); padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all 0.3s; }
+.btn-logout:hover { background: rgba(244, 67, 54, 0.3); }
+.hero { background: linear-gradient(135deg, rgba(42, 26, 0, 0.9), rgba(26, 26, 10, 0.9)); border-bottom: 2px solid rgba(212, 175, 55, 0.3); padding: 50px 20px; text-align: center; backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.1) 0%, transparent 70%); pointer-events: none; }
+.hero h1 { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 38px; margin-bottom: 12px; position: relative; z-index: 1; }
+.hero p { color: #888; position: relative; z-index: 1; }
+.container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+.groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px; margin-top: 30px; }
+.group-card { background: rgba(0, 0, 0, 0.8); border: 2px solid rgba(212, 175, 55, 0.4); border-radius: 20px; padding: 24px; backdrop-filter: blur(20px); box-shadow: 0 12px 40px rgba(212, 175, 55, 0.25); transition: all 0.3s; cursor: pointer; }
+.group-card:hover { box-shadow: 0 16px 50px rgba(212, 175, 55, 0.35); border-color: rgba(212, 175, 55, 0.6); transform: translateY(-5px); }
+.group-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.group-icon { width: 60px; height: 60px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.group-title { color: #FFD700; font-size: 22px; font-weight: bold; }
+.group-members { color: #aaa; font-size: 14px; margin-bottom: 12px; }
+.group-stats { display: flex; justify-content: space-between; margin-bottom: 16px; }
+.stat { text-align: center; }
+.stat-value { color: #FFD700; font-size: 20px; font-weight: bold; display: block; }
+.stat-label { color: #888; font-size: 12px; text-transform: uppercase; }
+.group-description { color: #ccc; font-size: 14px; line-height: 1.5; margin-bottom: 16px; }
+.group-actions { display: flex; gap: 12px; }
+.btn { padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; text-decoration: none; display: inline-block; text-align: center; }
+.btn-primary { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4); }
+.btn-secondary { background: rgba(212, 175, 55, 0.2); color: #D4AF37; border: 1px solid rgba(212, 175, 55, 0.4); }
+.btn-secondary:hover { background: rgba(212, 175, 55, 0.3); }
+.create-group-card { background: rgba(212, 175, 55, 0.1); border: 2px dashed rgba(212, 175, 55, 0.4); display: flex; align-items: center; justify-content: center; min-height: 300px; }
+.create-group-content { text-align: center; }
+.create-group-icon { width: 80px; height: 80px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px; }
+.create-group-title { color: #FFD700; font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+.create-group-desc { color: #888; font-size: 14px; margin-bottom: 20px; }
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; align-items: center; justify-content: center; z-index: 99999; }
+.modal-content { background: #1a1a1a; border: 1px solid #D4AF37; border-radius: 20px; padding: 32px; width: 90%; max-width: 500px; }
+.modal-header { text-align: center; margin-bottom: 24px; }
+.modal-title { color: #FFD700; font-size: 24px; font-weight: bold; }
+.form-group { margin-bottom: 20px; }
+.form-label { color: #bbb; font-size: 14px; display: block; margin-bottom: 8px; font-weight: 500; }
+.form-input, .form-textarea { width: 100%; padding: 14px 16px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; color: #fff; font-size: 15px; transition: all 0.3s; }
+.form-input:focus, .form-textarea:focus { outline: none; border-color: #D4AF37; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15); background: rgba(0, 0, 0, 0.7); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+.modal-actions .btn { flex: 1; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="header">
+<a href="index.html" class="logo">
+<img src="logo.svg" alt="G-Link Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+<span style="display:none;">🪙</span>
+G-Link
+</a>
+<div class="header-nav" id="headerNav">
+<a href="dashboard.html">Dashboard</a>
+<a href="create.html">Send Gold</a>
+<a href="groups.html" style="background: rgba(212, 175, 55, 0.15); border-color: rgba(212, 175, 55, 0.3);">Groups</a>
+<a href="login.html">Login</a>
+</div>
+</div>
+
+<div class="hero">
+<div style="font-size:48px;margin-bottom:12px">👥</div>
+<h1>Gold Groups</h1>
+<p>Create and join groups to share gold with friends, family, and communities</p>
+</div>
+
+<div class="container">
+<div class="groups-grid" id="groupsGrid">
+<!-- Create Group Card -->
+<div class="group-card create-group-card" onclick="showCreateGroupModal()">
+<div class="create-group-content">
+<div class="create-group-icon">➕</div>
+<div class="create-group-title">Create New Group</div>
+<div class="create-group-desc">Start a gold sharing group for any occasion</div>
+<button class="btn btn-primary">Create Group</button>
+</div>
+</div>
+
+<!-- Example Groups -->
+<div class="group-card" onclick="openGroup('family')">
+<div class="group-header">
+<div class="group-icon">👨‍👩‍👧‍👦</div>
+<div>
+<div class="group-title">Family Gold Vault</div>
+<div class="group-members">24 members • Created by Dad</div>
+</div>
+</div>
+<div class="group-stats">
+<div class="stat">
+<span class="stat-value">156.5g</span>
+<span class="stat-label">Total Gold</span>
+</div>
+<div class="stat">
+<span class="stat-value">12</span>
+<span class="stat-label">Active Gifts</span>
+</div>
+<div class="stat">
+<span class="stat-value">₹11.2L</span>
+<span class="stat-label">Value</span>
+</div>
+</div>
+<div class="group-description">
+A family vault where we share gold for birthdays, festivals, and special occasions. Perfect for building generational wealth together.
+</div>
+<div class="group-actions">
+<button class="btn btn-primary">Create Group</button>
+<button class="btn btn-secondary">Learn More</button>
+Collecting gold blessings for the happy couple! Every gram of gold represents our love and best wishes for their new journey.
+</div>
+<div class="group-actions">
+<button class="btn btn-primary">Send Blessing</button>
+<button class="btn btn-secondary">View Registry</button>
+</div>
+</div>
+
+<div class="group-card" onclick="openGroup('office')">
+<div class="group-header">
+<div class="group-icon">💼</div>
+<div>
+<div class="group-title">Team Celebration Fund</div>
+<div class="group-members">32 members • Created by Manager</div>
+</div>
+</div>
+<div class="group-stats">
+<div class="stat">
+<span class="stat-value">45.8g</span>
+<span class="stat-label">Total Gold</span>
+</div>
+<div class="stat">
+<span class="stat-value">8</span>
+<span class="stat-label">Contributions</span>
+</div>
+<div class="stat">
+<span class="stat-value">₹3.3L</span>
+<span class="stat-label">Value</span>
+</div>
+</div>
+<div class="group-description">
+Office celebration fund for farewells, birthdays, and team achievements. Building workplace culture one gold gram at a time.
+</div>
+<div class="group-actions">
+<button class="btn btn-primary">Contribute</button>
+<button class="btn btn-secondary">View Activity</button>
+</div>
+</div>
+
+<div class="group-card" onclick="openGroup('friends')">
+<div class="group-header">
+<div class="group-icon">🎉</div>
+<div>
+<div class="group-title">Friends Circle</div>
+<div class="group-members">18 members • Created by You</div>
+</div>
+</div>
+<div class="group-stats">
+<div class="stat">
+<span class="stat-value">67.3g</span>
+<span class="stat-label">Total Gold</span>
+</div>
+<div class="stat">
+<span class="stat-label">15</span>
+<span class="stat-label">Gifts Exchanged</span>
+</div>
+<div class="stat">
+<span class="stat-value">₹4.8L</span>
+<span class="stat-label">Value</span>
+</div>
+</div>
+<div class="group-description">
+Our close friends group for celebrating milestones, supporting each other, and sharing the wealth of our friendship.
+</div>
+<div class="group-actions">
+<button class="btn btn-primary">Manage Group</button>
+<button class="btn btn-secondary">Invite Friends</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Create Group Modal -->
+<div id="createGroupModal" class="modal hidden">
+<div class="modal-content">
+<div class="modal-header">
+<h2 class="modal-title">Create Gold Group</h2>
+<p style="color:#888;margin-top:8px">Start a group to share gold with your community</p>
+</div>
+<form id="createGroupForm">
+<div class="form-group">
+<label class="form-label">Group Name</label>
+<input type="text" class="form-input" id="groupName" placeholder="e.g., Family Gold Vault" required>
+</div>
+<div class="form-group">
+<label class="form-label">Group Type</label>
+<select class="form-input" id="groupType">
+<option value="family">👨‍👩‍👧‍👦 Family</option>
+<option value="wedding">💍 Wedding</option>
+<option value="office">💼 Office</option>
+<option value="friends">🎉 Friends</option>
+<option value="community">🏘️ Community</option>
+<option value="custom">✨ Custom</option>
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">Description</label>
+<textarea class="form-textarea" id="groupDescription" placeholder="What's this group for?"></textarea>
+</div>
+<div class="form-group">
+<label class="form-label">Group Rules (Optional)</label>
+<textarea class="form-textarea" id="groupRules" placeholder="Any special rules for this group?"></textarea>
+</div>
+<div class="modal-actions">
+<button type="button" class="btn btn-secondary" onclick="hideCreateGroupModal()">Cancel</button>
+<button type="submit" class="btn btn-primary">Create Group</button>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+// Check if user is logged in
+const user = JSON.parse(localStorage.getItem('glink_user'))
+if (!user) {
+alert('Please login first to access groups!')
+window.location.href = 'login.html'
+}
+
+// Update header based on login status
+function updateHeader() {
+const headerNav = document.getElementById('headerNav')
+if (user) {
+headerNav.innerHTML = `
+<a href="dashboard.html">Dashboard</a>
+<a href="create.html">Send Gold</a>
+<a href="groups.html" style="background: rgba(212, 175, 55, 0.15); border-color: rgba(212, 175, 55, 0.3);">Groups</a>
+<div class="user-info">
+<span>👤 ${user.name || user.email}</span>
+<button class="btn-logout" onclick="logout()">Logout</button>
+</div>
+`
+}
+}
+
+function logout() {
+localStorage.removeItem('glink_user')
+localStorage.removeItem('glink_wallet')
+localStorage.removeItem('glink_wallet_name')
+window.location.href = 'index.html'
+}
+
+updateHeader()
+
+// Modal functions
+function showCreateGroupModal() {
+document.getElementById('createGroupModal').classList.remove('hidden')
+}
+
+function hideCreateGroupModal() {
+document.getElementById('createGroupModal').classList.add('hidden')
+document.getElementById('createGroupForm').reset()
+}
+
+// Create group form submission
+document.getElementById('createGroupForm').addEventListener('submit', async (e) => {
+e.preventDefault()
+const groupName = document.getElementById('groupName').value
+const groupType = document.getElementById('groupType').value
+const groupDescription = document.getElementById('groupDescription').value
+const groupRules = document.getElementById('groupRules').value
+const user = JSON.parse(localStorage.getItem('glink_user'))
+
+try {
+const res = await fetch('/api/groups/create', {
+  method: 'POST',
+  headers: {'Content-Type':'application/json'},
+  body: JSON.stringify({
+    name: groupName,
+    type: groupType,
+    description: groupDescription,
+    rules: groupRules,
+    creatorEmail: user.email
+  })
+})
+const data = await res.json()
+if (data.success) {
+  alert('Group created successfully!')
+  hideCreateGroupModal()
+  loadGroups() // Reload groups
+} else {
+  alert('Error creating group: ' + data.error)
+}
+} catch(error) {
+alert('Error creating group: ' + error.message)
+}
+})
+
+// Load groups from API
+async function loadGroups() {
+try {
+const res = await fetch('/api/groups')
+const data = await res.json()
+if (data.success) {
+  displayGroups(data.groups)
+}
+} catch(error) {
+console.log('Error loading groups:', error)
+}
+}
+
+// Display groups
+function displayGroups(groups) {
+const groupsGrid = document.getElementById('groupsGrid')
+// Keep create group card
+const createCard = groupsGrid.querySelector('.create-group-card')
+groupsGrid.innerHTML = ''
+groupsGrid.appendChild(createCard)
+
+groups.forEach(group => {
+  const groupCard = createGroupCard(group)
+  groupsGrid.appendChild(groupCard)
+})
+}
+
+// Create group card element
+function createGroupCard(group) {
+const card = document.createElement('div')
+card.className = 'group-card'
+card.onclick = () => openGroup(group.group_id)
+
+const typeIcons = {
+  family: '👨‍👩‍👧‍👦',
+  wedding: '💍',
+  office: '💼',
+  friends: '🎉',
+  community: '🏘️',
+  custom: '✨'
+}
+
+card.innerHTML = `
+  <div class="group-header">
+    <div class="group-icon">${typeIcons[group.type] || '👥'}</div>
+    <div>
+      <div class="group-title">${group.name}</div>
+      <div class="group-members">${group.member_count} members • Created by ${group.creator_email}</div>
+    </div>
+  </div>
+  <div class="group-stats">
+    <div class="stat">
+      <span class="stat-value">${group.total_gold}g</span>
+      <span class="stat-label">Total Gold</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">${group.member_count}</span>
+      <span class="stat-label">Members</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">₹${Math.round(group.total_gold * 7200).toLocaleString()}</span>
+      <span class="stat-label">Value</span>
+    </div>
+  </div>
+  <div class="group-description">
+    ${group.description || 'A gold sharing group for building wealth together.'}
+  </div>
+  <div class="group-actions">
+    <button class="btn btn-primary">View Group</button>
+    <button class="btn btn-secondary">Contribute</button>
+  </div>
+`
+
+return card
+}
+
+// Initialize groups on load
+document.addEventListener('DOMContentLoaded', () => {
+loadGroups()
+})
+
+// Open group function
+function openGroup(groupId) {
+// TODO: Navigate to specific group page
+console.log('Opening group:', groupId)
+alert('Group details page coming soon!')
+}
+
+// Close modal when clicking outside
+document.getElementById('createGroupModal').addEventListener('click', (e) => {
+if (e.target.id === 'createGroupModal') {
+hideCreateGroupModal()
+}
+})
+</script>
+</body>
+</html>

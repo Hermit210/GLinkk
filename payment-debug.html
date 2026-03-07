@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Debug - G-Link</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <h1>Payment Debug Tool</h1>
+    
+    <div>
+        <h2>Current Configuration:</h2>
+        <p>Key ID: <span id="keyId">Loading...</span></p>
+        <p>Key Secret: <span id="keySecret">Loading...</span></p>
+    </div>
+    
+    <div>
+        <h2>Test Payment:</h2>
+        <button onclick="testPayment()" style="background: #D4AF37; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            Test Razorpay Payment (₹100)
+        </button>
+    </div>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; border-radius: 5px;"></div>
+    
+    <script>
+        // Load configuration
+        fetch('/api/payment/create-order', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ amount_inr: 100 })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('keyId').textContent = data.key || 'Not set';
+            document.getElementById('result').innerHTML = '<h3>✅ Order Created Successfully</h3><p>Order ID: ' + data.orderId + '</p><p>Amount: ₹' + (data.amount/100) + '</p>';
+        })
+        .catch(err => {
+            document.getElementById('result').innerHTML = '<h3>❌ Error</h3><p>' + err.message + '</p>';
+        });
+        
+        function testPayment() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing payment...</p>';
+            
+            fetch('/api/payment/create-order', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ amount_inr: 100 })
+            })
+            .then(res => res.json())
+            .then(order => {
+                if (order.success) {
+                    const options = {
+                        key: order.key,
+                        amount: order.amount,
+                        currency: 'INR',
+                        name: 'G-Link Test',
+                        description: 'Test Payment',
+                        order_id: order.orderId,
+                        handler: function(response) {
+                            resultDiv.innerHTML = '<h3>✅ Payment Success!</h3><p>Payment ID: ' + response.razorpay_payment_id + '</p>';
+                        },
+                        prefill: {
+                            name: 'Test User',
+                            email: 'test@example.com'
+                        },
+                        theme: { color: '#D4AF37' },
+                        modal: {
+                            ondismiss: function() {
+                                resultDiv.innerHTML = '<h3>❌ Payment Cancelled</h3>';
+                            }
+                        }
+                    };
+                    new Razorpay(options).open();
+                } else {
+                    resultDiv.innerHTML = '<h3>❌ Order Failed</h3><p>' + order.error + '</p>';
+                }
+            })
+            .catch(err => {
+                resultDiv.innerHTML = '<h3>❌ Error</h3><p>' + err.message + '</p>';
+            });
+        }
+    </script>
+</body>
+</html>

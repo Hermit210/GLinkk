@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You've Been Blessed! - G-Link</title>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="enhanced-styles.css">
+  <script src="wallet.js"></script>
+  <style>
+    :root {
+      --gold-primary: #D4AF37;
+      --gold-light: #F4D03F;
+      --gold-dark: #B8941E;
+      --bg-dark: #0a0a0a;
+      --bg-card: #161616;
+      --bg-elevated: #1f1f1f;
+      --text-light: #f0f0f0;
+      --text-muted: #a0a0a0;
+      --border-gold: rgba(212, 175, 55, 0.3);
+      --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .claim-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+    .claim-card { max-width: 480px; width: 100%; text-align: center; padding: 2rem; }
+    .claim-amount { font-size: 2.5rem; font-weight: 700; color: var(--gold-primary); margin: 1rem 0; }
+    .claim-message { background: var(--bg-card); padding: 1.5rem; border-radius: 16px; margin: 1.5rem 0; text-align: left; border-left: 4px solid var(--gold-primary); }
+    .claim-options { display: grid; gap: 1rem; margin-top: 2rem; text-align: left; }
+    .claim-option { padding: 1rem; background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(212,175,55,0.2); cursor: pointer; transition: var(--transition); }
+    .claim-option:hover, .claim-option.selected { border-color: var(--gold-primary); box-shadow: var(--shadow-gold); }
+    .claim-option h4 { color: var(--gold-primary); margin-bottom: 0.5rem; }
+    .success-view { display: none; }
+    .success-view.active { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .btn-gold { background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%); color: #000; font-weight: 700; transition: var(--transition); }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
+    .btn-outline-gold { background: transparent; border: 2px solid var(--gold-primary); color: var(--gold-primary); font-weight: 700; transition: var(--transition); }
+    .btn-outline-gold:hover { background: var(--gold-primary); color: #000; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2); }
+  </style>
+</head>
+<body>
+  <div id="preloader" class="preloader" style="display:none!important;"><div class="spinner"></div></div>
+
+  <header class="bg-card border-b border-gold py-4 px-6 shadow-lg">
+    <div class="max-w-6xl mx-auto flex items-center">
+      <a href="index.html" class="flex items-center text-gold font-bold text-xl hover:text-gold-light transition">
+        <img src="logo.svg" alt="G-Link Logo" class="w-8 h-8 mr-2">
+        <span class="hidden sm:inline">G-Link</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="claim-page">
+    <div class="claim-card" id="linkInfo">
+      <h1 style="font-size: 1.75rem; color: var(--gold-primary);">You've Been Blessed! 🎉</h1>
+      <p id="senderLabel" style="color: var(--text-muted); margin-top: 0.5rem;">From <strong id="senderName">Someone special</strong></p>
+      <div class="claim-amount" id="amountINR">₹5,000</div>
+      <p id="goldGrams" style="color: var(--gold-primary);">≈ 0.77g of gold</p>
+      <div class="claim-message" id="messageBox" style="display: none;">
+        <strong>Message:</strong>
+        <p id="message" style="margin-top: 0.5rem;"></p>
+      </div>
+      <button class="btn-gold" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1.5rem; border-radius: 16px;" id="claimBtn" onclick="claimGold()">
+        CLAIM YOUR GOLD
+      </button>
+      <div id="msg" class="msg-box"></div>
+      <div class="claim-options" id="claimForm">
+        <h3 style="color: var(--gold-primary); margin-bottom: 1rem;">Enter your details to claim:</h3>
+        <input type="text" id="claimerName" placeholder="Your Name" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-gold); border-radius: 12px; background: var(--bg-card); color: var(--text-light); margin-bottom: 1rem;">
+        <input type="email" id="claimerEmail" placeholder="Your Email" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-gold); border-radius: 12px; background: var(--bg-card); color: var(--text-light); margin-bottom: 1rem;">
+        <input type="tel" id="claimerPhone" placeholder="Your Phone" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-gold); border-radius: 12px; background: var(--bg-card); color: var(--text-light); margin-bottom: 1rem;">
+      </div>
+    </div>
+
+    <div class="claim-card success-view" id="successSection">
+      <h1 style="font-size: 2rem; color: var(--gold-primary);">🎉 Success!</h1>
+      <p style="margin: 1rem 0;">Your gold has been claimed and saved to your G-Link vault.</p>
+      <p style="color: var(--gold-primary); font-weight: 600;" id="claimedGrams"></p>
+      <button id="dashboardBtn" class="btn-gold" style="margin-top: 1.5rem; display: inline-block; border-radius: 12px;">Go to Dashboard</button>
+      <a href="index.html" class="btn-outline-gold" style="margin-top: 0.5rem; display: inline-block; border-radius: 12px;">Back to Home</a>
+    </div>
+  </main>
+
+  <script>
+const slug = new URLSearchParams(window.location.search).get('id')
+if (!slug) {
+  document.body.innerHTML = '<div style="text-align:center;padding:50px;color:#fff"><h2>Invalid link!</h2></div>'
+}
+
+let linkData = null
+
+async function loadLink() {
+  try {
+    const res = await fetch('/api/links/' + slug)
+    const data = await res.json()
+    
+    if (data.success) {
+      linkData = data.link
+      document.getElementById('senderName').textContent = linkData.sender_name || 'Someone'
+      document.getElementById('goldGrams').textContent = linkData.gold_grams + 'g'
+      document.getElementById('amountINR').textContent = '₹' + linkData.amount_inr
+      document.getElementById('message').textContent = linkData.message || 'Enjoy your gold!'
+      
+      if (linkData.status === 'claimed') {
+        document.getElementById('linkInfo').innerHTML = `
+          <div style="text-align:center;padding:2rem">
+            <h1 style="color:#f44336;font-size:2rem;margin-bottom:1rem">⏰ Link Expired</h1>
+            <p style="color:#888;margin-bottom:2rem">This gold link has already been claimed and is no longer available.</p>
+            <div style="background:#1a3a1a;border:1px solid #4CAF50;border-radius:12px;padding:20px;margin:2rem 0">
+              <p style="color:#4CAF50;font-size:18px;margin-bottom:0.5rem">✅ Successfully Claimed</p>
+              <p style="color:#ccc">${linkData.gold_grams}g gold was claimed by ${linkData.claimer_name}</p>
+              <p style="color:#ccc;font-size:14px">${linkData.claimed_at ? new Date(linkData.claimed_at).toLocaleString() : ''}</p>
+            </div>
+            <a href="index.html" class="btn-gold" style="display:inline-block;padding:12px 24px;border-radius:12px;text-decoration:none;margin-top:1rem">Create Your Own Gold Link</a>
+          </div>
+        `
+      }
+    } else {
+      document.getElementById('linkInfo').innerHTML = 
+        '<p style="color:#f44336;text-align:center">Link not found or expired!</p>'
+    }
+  } catch(e) {
+    console.log('Load link error:', e)
+  }
+}
+
+async function claimGold() {
+  const name = document.getElementById('claimerName').value.trim()
+  const email = document.getElementById('claimerEmail').value.trim()
+  const phone = document.getElementById('claimerPhone').value.trim()
+  
+  if (!name || !email) {
+    showMsg('Please fill name and email', 'err')
+    return
+  }
+  
+  showMsg('Claiming gold on Solana...', 'info')
+  document.getElementById('claimBtn').disabled = true
+  
+  try {
+    const res = await fetch('/api/links/' + slug + '/claim', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name, email, phone })
+    })
+    const data = await res.json()
+    
+    if (data.success) {
+      document.getElementById('claimForm').style.display = 'none'
+      document.getElementById('successSection').style.display = 'block'
+      document.getElementById('claimedGrams').textContent = data.goldGrams + 'g'
+      document.getElementById('dashboardBtn').onclick = () => {
+        window.location.href = `recipient-dashboard.html?email=${encodeURIComponent(email)}`
+      }
+    } else {
+      showMsg(data.error || 'Claim failed', 'err')
+      document.getElementById('claimBtn').disabled = false
+    }
+  } catch(e) {
+    showMsg('Error: ' + e.message, 'err')
+    document.getElementById('claimBtn').disabled = false
+  }
+}
+
+function showMsg(msg, type) {
+  const el = document.getElementById('msg')
+  if (el) {
+    el.textContent = msg
+    el.className = 'msg ' + type
+    el.style.display = 'block'
+  }
+}
+
+loadLink()
+  </script>
+</body>
+</html>

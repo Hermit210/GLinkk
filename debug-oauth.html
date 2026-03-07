@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google OAuth Debug</title>
+</head>
+<body>
+    <h1>Google OAuth Debug Test</h1>
+    
+    <p><strong>Current Configuration:</strong></p>
+    <ul>
+        <li>Client ID: 780940670824-baobfqoc0i0fmos8jn8ofm8bv6mjkepl.apps.googleusercontent.com</li>
+        <li>Callback URL: http://localhost:3000/auth/google/callback</li>
+    </ul>
+    
+    <p><strong>Test Google OAuth:</strong></p>
+    <a href="/auth/google" style="background: #4285f4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+        Test Google Sign In
+    </a>
+    
+    <p><strong>If it fails, check:</strong></p>
+    <ol>
+        <li>Google Cloud Console has exactly: http://localhost:3000/auth/google/callback</li>
+        <li>No extra slashes or different protocols</li>
+        <li>Client ID matches exactly</li>
+    </ol>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blessing Page - G-Link</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        :root {
+            --gold-primary: #D4AF37;
+            --gold-light: #F4D03F;
+            --gold-dark: #B8941E;
+            --bg-dark: #0a0a0a;
+            --bg-card: #161616;
+            --bg-elevated: #1f1f1f;
+            --text-light: #f0f0f0;
+            --text-muted: #a0a0a0;
+            --border-gold: rgba(212, 175, 55, 0.3);
+            --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #0a0a0a 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .blessing-card {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.25);
+            text-align: center;
+        }
+
+        .blessing-header {
+            margin-bottom: 30px;
+        }
+
+        .blessing-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--gold-primary);
+            margin-bottom: 10px;
+        }
+
+        .blessing-occasion {
+            font-size: 18px;
+            color: var(--gold-light);
+            margin-bottom: 15px;
+        }
+
+        .blessing-message {
+            font-size: 16px;
+            color: #ccc;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        .gold-stats {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--gold-primary);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .send-blessing {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .send-title {
+            font-size: 20px;
+            color: var(--gold-primary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .amount-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .amount-btn:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: var(--gold-primary);
+            transform: translateY(-2px);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading" class="loading">
+            🪙 Loading blessing page...
+        </div>
+        
+        <div id="blessingContent" style="display: none;">
+            <!-- Content will be loaded here -->
+        </div>
+        
+        <div id="error" class="error" style="display: none;">
+            <!-- Error messages will be shown here -->
+        </div>
+    </div>
+
+    <script>
+        console.log('=== SIMPLE BLESSING PAGE LOADED ===');
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const blessingId = urlParams.get('id');
+        
+        console.log('Blessing ID:', blessingId);
+        console.log('Full URL:', window.location.href);
+        
+        // Simple error handling
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.error);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').innerHTML = `
+                <h3>❌ JavaScript Error</h3>
+                <p><strong>Error:</strong> ${e.error.message}</p>
+                <p><strong>Line:</strong> ${e.lineno}</p>
+                <p><strong>Please refresh and try again.</p>
+            `;
+        });
+        
+        // Main function to load blessing data
+        async function loadBlessing() {
+            if (!blessingId) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `
+                    <h3>❌ No Blessing ID</h3>
+                    <p>Please provide a blessing ID in the URL.</p>
+                    <p>Example: <code>/blessing.html?id=Ee5sVnzls1</code></p>
+                `;
+                return;
+            }
+            
+            try {
+                console.log('Fetching blessing data...');
+                const response = await fetch(`/api/blessing/${blessingId}`);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'Blessing not found');
+                }
+                
+                // Success - display blessing
+                displayBlessing(data.blessing, data.entries || []);
+                
+            } catch (error) {
+                console.error('Load error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `
+                    <h3>❌ Error Loading Blessing</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Please check the blessing ID and try again.</p>
+                `;
+            }
+        }
+        
+        // Function to display blessing
+        function displayBlessing(blessing, entries) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('blessingContent').style.display = 'block';
+            
+            const html = `
+                <div class="blessing-card">
+                    <div class="blessing-header">
+                        <div class="blessing-name">${blessing.name}</div>
+                        <div class="blessing-occasion">${blessing.occasion}</div>
+                        <div class="blessing-message">${blessing.message || 'Send gold blessings!'}</div>
+                    </div>
+                    
+                    <div class="gold-stats">
+                        <div class="stat">
+                            <span class="stat-value">${blessing.total_gold || 0}g</span>
+                            <span class="stat-label">Gold Received</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">₹${Math.round(blessing.total_inr || 0)}</span>
+                            <span class="stat-label">Total Value</span>
+                        </div>
+                    </div>
+                    
+                    <div class="send-blessing">
+                        <div class="send-title">🪙 Send Gold Blessing</div>
+                        
+                        <div class="amount-buttons">
+                            <button class="amount-btn" onclick="selectAmount(500)">₹500</button>
+                            <button class="amount-btn" onclick="selectAmount(1000)">₹1000</button>
+                            <button class="amount-btn" onclick="selectAmount(2100)">₹2100</button>
+                        </div>
+                        
+                        <input type="text" class="form-input" id="blesserName" placeholder="Your Name *" required>
+                        <input type="email" class="form-input" id="blesserEmail" placeholder="Your Email">
+                        <textarea class="form-input" id="blesserMessage" placeholder="Your blessing message..." style="min-height: 80px;"></textarea>
+                        
+                        <button class="btn-send" onclick="sendBlessing()">
+                            🪙 Send Gold Blessing
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('blessingContent').innerHTML = html;
+        }
+        
+        // Simple functions
+        let selectedAmount = 0;
+        
+        function selectAmount(amount) {
+            selectedAmount = amount;
+            console.log('Selected amount:', amount);
+        }
+        
+        function sendBlessing() {
+            const name = document.getElementById('blesserName').value;
+            const email = document.getElementById('blesserEmail').value;
+            const message = document.getElementById('blesserMessage').value;
+            
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            if (selectedAmount < 500) {
+                alert('Please select an amount');
+                return;
+            }
+            
+            alert(`Would send ${selectedAmount}₹ blessing to ${blessingId}\n\nName: ${name}\nEmail: ${email}\nMessage: ${message}\n\n(This is a test - actual payment integration needed)`);
+        }
+        
+        // Load the blessing
+        loadBlessing();
+    </script>
+</body>
+</html>

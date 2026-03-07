@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blessing Registry - G-Link</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+        }
+        .blessing-bg {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-white text-xl font-bold">G-Link Blessing Registry</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="create.html" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-coins mr-2"></i>Send Gold
+                    </a>
+                    <a href="sender-dashboard.html" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-paper-plane mr-2"></i>My Sent
+                    </a>
+                    <a href="recipient-dashboard.html" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-inbox mr-2"></i>My Received
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto py-8 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                    <i class="fas fa-pray text-purple-600 mr-3"></i>
+                    Create Your Blessing Registry
+                </h1>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                    Share your special moments and receive heartfelt blessings from family and friends around the world.
+                </p>
+            </div>
+
+            <!-- Create Form -->
+            <div class="bg-white shadow-xl rounded-2xl overflow-hidden card-hover">
+                <div class="blessing-bg px-6 py-4">
+                    <h2 class="text-white text-xl font-semibold">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Create New Blessing Registry
+                    </h2>
+                </div>
+
+                <form id="registryForm" class="p-8 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="registryName" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-tag mr-2 text-purple-600"></i>
+                                Registry Name *
+                            </label>
+                            <input
+                                type="text"
+                                id="registryName"
+                                name="registryName"
+                                placeholder="e.g., Sarah's Graduation Blessings"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                required
+                            >
+                            <p class="text-xs text-gray-500 mt-1">Give your registry a meaningful name</p>
+                        </div>
+
+                        <div>
+                            <label for="creatorName" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-user mr-2 text-purple-600"></i>
+                                Your Name *
+                            </label>
+                            <input
+                                type="text"
+                                id="creatorName"
+                                name="creatorName"
+                                placeholder="Your full name"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="creatorEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-envelope mr-2 text-purple-600"></i>
+                            Your Email *
+                        </label>
+                        <input
+                            type="email"
+                            id="creatorEmail"
+                            name="creatorEmail"
+                            placeholder="your.email@example.com"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                            required
+                        >
+                        <p class="text-xs text-gray-500 mt-1">We'll use this to manage your registry</p>
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-comment-alt mr-2 text-purple-600"></i>
+                            Description (Optional)
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="4"
+                            placeholder="Tell people about your special occasion, what you're celebrating, or why you're creating this blessing registry..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-vertical"
+                        ></textarea>
+                    </div>
+
+                    <!-- Preview Section -->
+                    <div id="previewSection" class="hidden border-t pt-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            <i class="fas fa-eye mr-2 text-purple-600"></i>
+                            Preview Your Registry
+                        </h3>
+                        <div class="bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-300">
+                            <div class="text-center">
+                                <i class="fas fa-pray text-4xl text-purple-400 mb-3"></i>
+                                <h4 id="previewTitle" class="text-xl font-semibold text-gray-900 mb-2"></h4>
+                                <p id="previewCreator" class="text-gray-600 mb-3"></p>
+                                <p id="previewDesc" class="text-gray-700 italic"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-center pt-4">
+                        <button
+                            type="submit"
+                            id="submitBtn"
+                            class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-purple-700 hover:to-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                        >
+                            <i class="fas fa-magic mr-2"></i>
+                            Create Blessing Registry
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden mt-8 bg-green-50 border border-green-200 rounded-xl p-6">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 text-2xl mr-4"></i>
+                    <div>
+                        <h3 class="text-lg font-semibold text-green-900">Blessing Registry Created!</h3>
+                        <p class="text-green-700 mt-1">Your blessing registry has been created successfully.</p>
+                    </div>
+                </div>
+                <div class="mt-4 p-4 bg-white rounded-lg border">
+                    <p class="text-sm text-gray-600 mb-2">Share this link with your loved ones:</p>
+                    <div class="flex items-center space-x-2">
+                        <input
+                            type="text"
+                            id="registryUrl"
+                            readonly
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                        >
+                        <button
+                            onclick="copyRegistryUrl()"
+                            class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-medium"
+                        >
+                            <i class="fas fa-copy mr-1"></i>Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-4 flex space-x-3">
+                    <button
+                        onclick="viewRegistry()"
+                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-medium"
+                    >
+                        <i class="fas fa-eye mr-1"></i>View My Registry
+                    </button>
+                    <button
+                        onclick="createAnother()"
+                        class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm font-medium"
+                    >
+                        <i class="fas fa-plus mr-1"></i>Create Another
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registryForm');
+        const previewSection = document.getElementById('previewSection');
+        const successMessage = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('submitBtn');
+
+        let createdRegistryUrl = '';
+
+        // Preview functionality
+        function updatePreview() {
+            const registryName = document.getElementById('registryName').value;
+            const creatorName = document.getElementById('creatorName').value;
+            const description = document.getElementById('description').value;
+
+            if (registryName || creatorName) {
+                document.getElementById('previewTitle').textContent = registryName || 'Your Blessing Registry';
+                document.getElementById('previewCreator').textContent = creatorName ? `Created by ${creatorName}` : '';
+                document.getElementById('previewDesc').textContent = description || 'Share your blessings and receive heartfelt messages from loved ones.';
+                previewSection.classList.remove('hidden');
+            } else {
+                previewSection.classList.add('hidden');
+            }
+        }
+
+        // Add preview listeners
+        ['registryName', 'creatorName', 'description'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = {
+                registryName: formData.get('registryName'),
+                creatorName: formData.get('creatorName'),
+                creatorEmail: formData.get('creatorEmail'),
+                description: formData.get('description')
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+
+            try {
+                const response = await fetch('/api/blessings/create-registry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    createdRegistryUrl = result.registryUrl;
+                    document.getElementById('registryUrl').value = createdRegistryUrl;
+                    form.style.display = 'none';
+                    successMessage.classList.remove('hidden');
+                    successMessage.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-magic mr-2"></i>Create Blessing Registry';
+            }
+        });
+
+        // Utility functions
+        function copyRegistryUrl() {
+            const urlInput = document.getElementById('registryUrl');
+            urlInput.select();
+            document.execCommand('copy');
+
+            // Visual feedback
+            const copyBtn = event.target.closest('button');
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!';
+            copyBtn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+            copyBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                copyBtn.classList.add('bg-purple-600', 'hover:bg-purple-700');
+            }, 2000);
+        }
+
+        function viewRegistry() {
+            window.open(createdRegistryUrl, '_blank');
+        }
+
+        function createAnother() {
+            form.reset();
+            form.style.display = 'block';
+            successMessage.classList.add('hidden');
+            previewSection.classList.add('hidden');
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize
+        updatePreview();
+    </script>
+</body>
+</html>

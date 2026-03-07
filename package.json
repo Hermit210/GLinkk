@@ -1,0 +1,31 @@
+{
+  "name": "g-link",
+  "version": "1.0.0",
+  "description": "Send Gold as Easily as Sending a Link",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/wallet-adapter-phantom": "^0.9.28",
+    "@solana/wallet-adapter-solflare": "^0.6.32",
+    "@solana/web3.js": "^1.98.4",
+    "@supabase/supabase-js": "^2.98.0",
+    "axios": "^1.6.0",
+    "bcryptjs": "^3.0.3",
+    "bs58": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.19.0",
+    "nanoid": "^5.1.6",
+    "nodemailer": "^8.0.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.20.0",
+    "razorpay": "^2.9.6",
+    "twilio": "^5.12.2"
+  }
+}

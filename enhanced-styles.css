@@ -1,0 +1,142 @@
+/* G-Link Enhanced Styles - Modern, Polished Design */
+:root {
+  --gold-primary: #D4AF37;
+  --gold-light: #F4D03F;
+  --gold-dark: #B8941E;
+  --bg-dark: #0a0a0a;
+  --bg-card: #161616;
+  --bg-elevated: #1f1f1f;
+  --text-light: #f0f0f0;
+  --text-muted: #a0a0a0;
+  --border-gold: rgba(212, 175, 55, 0.3);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Styles */
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Utility Classes */
+.text-gold { color: var(--gold-primary); }
+.text-gold-light { color: var(--gold-light); }
+.bg-gold { background: var(--gold-primary); }
+.bg-gold-gradient { background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%); }
+.hover\:bg-gold:hover { background: var(--gold-dark); }
+.text-white { color: #fff; }
+.text-gray-400 { color: var(--text-muted); }
+
+/* Card Styles */
+.card-gold {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  box-shadow: var(--shadow-gold);
+  transition: var(--transition);
+}
+
+.card-gold:hover {
+  transform: translateY(-8px);
+  border-color: var(--gold-light);
+  box-shadow: 0 12px 40px rgba(212, 175, 55, 0.25);
+}
+
+/* Button Styles */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%);
+  color: #000;
+  font-weight: 700;
+  transition: var(--transition);
+  border: none;
+}
+
+.btn-gold:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.3);
+}
+
+.btn-outline-gold {
+  background: transparent;
+  border: 2px solid var(--gold-primary);
+  color: var(--gold-primary);
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.btn-outline-gold:hover {
+  background: var(--gold-primary);
+  color: #000;
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2);
+}
+
+/* Input Styles */
+input, select, textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-gold);
+  background: var(--bg-card);
+  color: var(--text-light);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  transition: var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes bounceIn { 0% { opacity: 0; transform: scale(0.8); } 50% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+.animate-fade-in { animation: fadeIn 0.8s ease-out; }
+.animate-slide-up { animation: slideUp 0.6s ease-out; }
+.animate-bounce-in { animation: bounceIn 0.8s ease-out; }
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  padding: 4rem 1.5rem;
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero-section h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--gold-primary);
+  line-height: 1.2;
+}
+
+.hero-section p {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+/* Grid Layouts */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .hero-section { padding: 3rem 1rem; }
+  .hero-section h1 { font-size: 2rem; }
+}

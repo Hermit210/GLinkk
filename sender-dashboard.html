@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sender Dashboard - G-Link</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-white text-xl font-bold">G-Link Sender Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="create.html" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-plus mr-2"></i>Create New Link
+                    </a>
+                    <a href="recipient-dashboard.html" class="text-white hover:text-blue-200 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-inbox mr-2"></i>My Received
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Your Sent Gold Links</h2>
+                <div class="flex space-x-2">
+                    <button id="filter-all" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">All</button>
+                    <button id="filter-pending" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Pending</button>
+                    <button id="filter-claimed" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Claimed</button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white overflow-hidden shadow rounded-lg card-hover">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-paper-plane text-blue-500 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Sent</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="total-sent">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white overflow-hidden shadow rounded-lg card-hover">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-clock text-yellow-500 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Pending</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="total-pending">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white overflow-hidden shadow rounded-lg card-hover">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Claimed</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="total-claimed">0</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white overflow-hidden shadow rounded-lg card-hover">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-coins text-yellow-600 text-2xl"></i>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Gold</dt>
+                                    <dd class="text-lg font-medium text-gray-900" id="total-gold">0g</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Links List -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul class="divide-y divide-gray-200" id="links-list">
+                    <!-- Links will be loaded here -->
+                </ul>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-12">
+                <i class="fas fa-paper-plane text-gray-400 text-6xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No gold links sent yet</h3>
+                <p class="text-gray-500 mb-6">Create your first gold link to get started!</p>
+                <a href="create.html" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="fas fa-plus mr-2"></i>Create Gold Link
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allLinks = [];
+        let currentFilter = 'all';
+
+        // Load sender's links
+        async function loadSenderLinks() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const senderEmail = urlParams.get('email');
+            
+            if (!senderEmail) {
+                alert('Please provide your email address');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/links/sender-history?sender_email=${encodeURIComponent(senderEmail)}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    allLinks = data.links;
+                    updateStats();
+                    renderLinks();
+                } else {
+                    console.error('Failed to load links:', data.error);
+                }
+            } catch (error) {
+                console.error('Error loading links:', error);
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = allLinks.length;
+            const pending = allLinks.filter(link => link.status === 'unclaimed').length;
+            const claimed = allLinks.filter(link => link.status === 'claimed').length;
+            const totalGold = allLinks.reduce((sum, link) => sum + (link.gold_grams || 0), 0);
+
+            document.getElementById('total-sent').textContent = total;
+            document.getElementById('total-pending').textContent = pending;
+            document.getElementById('total-claimed').textContent = claimed;
+            document.getElementById('total-gold').textContent = totalGold.toFixed(2) + 'g';
+        }
+
+        // Render links based on filter
+        function renderLinks() {
+            const filteredLinks = currentFilter === 'all' ?
+                allLinks :
+                allLinks.filter(link => link.status === currentFilter);
+
+            const linksList = document.getElementById('links-list');
+            const emptyState = document.getElementById('empty-state');
+
+            if (filteredLinks.length === 0) {
+                linksList.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            linksList.innerHTML = filteredLinks.map(link => `
+                <li class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                ${link.status === 'claimed' ?
+                                    '<i class="fas fa-check-circle text-green-500 text-xl"></i>' :
+                                    '<i class="fas fa-clock text-yellow-500 text-xl"></i>'}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    ${link.gold_grams ? link.gold_grams.toFixed(3) : '0.000'}g Gold
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    To: ${link.recipient_glink_id}
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    Sent: ${new Date(link.created_at).toLocaleDateString()}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                link.status === 'claimed' ?
+                                    'bg-green-100 text-green-800' :
+                                    'bg-yellow-100 text-yellow-800'
+                            }">
+                                ${link.status === 'claimed' ? 'Claimed' : 'Pending'}
+                            </span>
+                            ${link.status === 'claimed' ? `
+                                <div class="text-right">
+                                    <div class="text-sm font-medium text-gray-900">${link.claimer_name || 'Anonymous'}</div>
+                                    <div class="text-xs text-gray-500">${link.claimer_email || ''}</div>
+                                    <div class="text-xs text-gray-400">Claimed: ${new Date(link.claimed_at).toLocaleDateString()}</div>
+                                </div>
+                            ` : `
+                                <a href="${window.location.origin}/claim.html?id=${link.link_id}"
+                                   class="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                                    View Link
+                                </a>
+                            `}
+                        </div>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        // Filter event listeners
+        document.getElementById('filter-all').addEventListener('click', () => {
+            currentFilter = 'all';
+            renderLinks();
+            updateButtonStyles();
+        });
+
+        document.getElementById('filter-pending').addEventListener('click', () => {
+            currentFilter = 'unclaimed';
+            renderLinks();
+            updateButtonStyles();
+        });
+
+        document.getElementById('filter-claimed').addEventListener('click', () => {
+            currentFilter = 'claimed';
+            renderLinks();
+            updateButtonStyles();
+        });
+
+        function updateButtonStyles() {
+            const buttons = ['filter-all', 'filter-pending', 'filter-claimed'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                if ((id === 'filter-all' && currentFilter === 'all') ||
+                    (id === 'filter-pending' && currentFilter === 'unclaimed') ||
+                    (id === 'filter-claimed' && currentFilter === 'claimed')) {
+                    btn.classList.remove('bg-gray-600', 'bg-green-600');
+                    btn.classList.add('bg-blue-600');
+                } else {
+                    btn.classList.remove('bg-blue-600');
+                    btn.classList.add(id === 'filter-pending' ? 'bg-gray-600' : 'bg-green-600');
+                }
+            });
+        }
+
+        // Load links on page load
+        document.addEventListener('DOMContentLoaded', loadSenderLinks);
+    </script>
+</body>
+</html>

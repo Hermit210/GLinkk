@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Wallet Modal</title>
+    <script src="wallet.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+        }
+        button {
+            background: linear-gradient(135deg, #D4AF37, #B8941E);
+            color: black;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 1rem;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        }
+        #status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            min-height: 60px;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Wallet Modal</h1>
+        <button onclick="testWallet()">Open Wallet Selector</button>
+        <button onclick="testTransaction()">Test Transaction Signing</button>
+        <p id="status">Click a button to test</p>
+    </div>
+    <script>
+        function testWallet() {
+            window.onWalletConnected = function(address, name, provider) {
+                document.getElementById('status').textContent = 
+                    `✅ Connected: ${name}\nAddress: ${address.slice(0, 8)}...${address.slice(-6)}`
+            }
+            window.showWalletModal()
+        }
+
+        async function testTransaction() {
+            window.onWalletConnected = async function(address, name, provider) {
+                try {
+                    document.getElementById('status').textContent = 'Signing transaction...'
+                    const result = await window.signTransaction(provider, 'Test transaction from G-Link')
+                    document.getElementById('status').textContent = 
+                        `✅ Transaction signed!\nSignature: ${result.signature.slice(0, 20)}...`
+                } catch(e) {
+                    document.getElementById('status').textContent = `❌ Error: ${e.message}`
+                }
+            }
+            window.showWalletModal()
+        }
+
+        window.glinkShowMsg = function(msg, type) {
+            document.getElementById('status').textContent = msg
+        }
+    </script>
+</body>
+</html>

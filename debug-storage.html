@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStorage Debug - G-Link</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: #fff; }
+        .debug-box { background: #2a2a2a; border: 1px solid #444; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .error { background: #ff4444; color: white; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        .success { background: #00aa00; color: white; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        .warning { background: #ffaa00; color: #000; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #1a1a1a; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 G-Link LocalStorage Debug</h1>
+    
+    <div class="debug-box">
+        <h3>Current LocalStorage Status</h3>
+        <div id="storageStatus"></div>
+        
+        <h3>Current User Data</h3>
+        <pre id="userData"></pre>
+        
+        <h3>Actions</h3>
+        <button onclick="checkStorage()">Check Storage</button>
+        <button onclick="clearStorage()">Clear Storage</button>
+        <button onclick="testUser()">Test User</button>
+        <button onclick="setTestUser()">Set Test User</button>
+        <button onclick="goToPages()">Test Pages</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        function checkStorage() {
+            console.log('=== CHECKING LOCAL STORAGE ===');
+            
+            const storage = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                storage[key] = value;
+            }
+            
+            document.getElementById('storageStatus').innerHTML = `
+                <strong>Storage Items:</strong> ${localStorage.length}<br>
+                <strong>Available:</strong> ${localStorage ? 'YES' : 'NO'}<br>
+                <strong>Keys:</strong> ${Object.keys(storage).join(', ')}
+            `;
+            
+            document.getElementById('userData').textContent = JSON.stringify(storage, null, 2);
+        }
+        
+        function clearStorage() {
+            if (confirm('Clear all localStorage? This will log you out.')) {
+                localStorage.clear();
+                checkStorage();
+                showMessage('Storage cleared!', 'warning');
+            }
+        }
+        
+        function testUser() {
+            console.log('=== TESTING USER DATA ===');
+            
+            try {
+                const userData = localStorage.getItem('glink_user');
+                console.log('Raw user data:', userData);
+                
+                if (!userData || userData === 'null' || userData === 'undefined') {
+                    showMessage('No user data found', 'error');
+                    return;
+                }
+                
+                const user = JSON.parse(userData);
+                console.log('Parsed user:', user);
+                
+                if (!user || !user.email) {
+                    showMessage('Invalid user data structure', 'error');
+                    return;
+                }
+                
+                showMessage(`User found: ${user.name || user.email}`, 'success');
+                
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function setTestUser() {
+            const testUser = {
+                name: 'Test User',
+                email: 'test@example.com',
+                phone: '9999999999',
+                grail_user_id: 'test_grail_id'
+            };
+            
+            localStorage.setItem('glink_user', JSON.stringify(testUser));
+            showMessage('Test user set!', 'success');
+            checkStorage();
+        }
+        
+        function goToPages() {
+            console.log('=== TESTING PAGE ACCESS ===');
+            
+            const pages = [
+                'dashboard.html',
+                'profile.html', 
+                'blessing.html?id=Ee5sVnzls1',
+                'create.html'
+            ];
+            
+            let results = '<h3>Page Access Test Results:</h3>';
+            
+            pages.forEach(page => {
+                results += `<div style="margin: 10px 0; padding: 10px; border: 1px solid #444; border-radius: 5px;">`;
+                results += `<strong>${page}:</strong> `;
+                results += `<a href="${page}" target="_blank" style="color: #007bff;">Open in New Tab</a>`;
+                results += ` | <a href="javascript:window.open('${page}', '_blank')" style="color: #28a745;">Test Popup</a>`;
+                results += `</div>`;
+            });
+            
+            document.getElementById('results').innerHTML = results;
+        }
+        
+        function showMessage(message, type) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                results.innerHTML = '';
+            }, 3000);
+        }
+        
+        // Auto-check on load
+        checkStorage();
+        testUser();
+    </script>
+</body>
+</html>

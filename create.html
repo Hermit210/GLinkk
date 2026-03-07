@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Send Gold - G-Link</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+// Fix Razorpay ethereum property conflict
+if (window.Razorpay) {
+  const originalRazorpay = window.Razorpay;
+  window.Razorpay = function(options) {
+    return new originalRazorpay(options);
+  };
+}
+</script>
+<style>
+:root {
+  --gold-primary: #D4AF37;
+  --gold-light: #F4D03F;
+  --gold-dark: #B8941E;
+  --bg-dark: #0a0a0a;
+  --bg-card: #161616;
+  --bg-elevated: #1f1f1f;
+  --text-light: #f0f0f0;
+  --text-muted: #a0a0a0;
+  --border-gold: rgba(212, 175, 55, 0.3);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-site { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); min-height: 100vh; }
+.text-gold { color: var(--gold-primary); }
+.bg-gold { background: var(--gold-primary); }
+.hover\:bg-gold:hover { background: var(--gold-dark); }
+.text-white { color: #fff; }
+.text-gray-400 { color: var(--text-muted); }
+.card-gold { background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); transition: var(--transition); backdrop-filter: blur(10px); }
+.card-gold:hover { transform: translateY(-5px); border-color: var(--gold-light); box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4); }
+.btn-gold { background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%); color: #000; font-weight: 700; transition: var(--transition); }
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
+.btn-outline-gold { background: transparent; border: 2px solid var(--gold-primary); color: var(--gold-primary); font-weight: 700; transition: var(--transition); }
+.btn-outline-gold:hover { background: var(--gold-primary); color: #000; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2); }
+
+.navbar { background: var(--bg-card); border-bottom: 1px solid var(--border-gold); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+.logo { color: var(--gold-primary); font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+.form-section { max-width: 50%; margin: 0 auto; padding: 40px 20px; }
+.form-input { width: 100%; padding: 14px 16px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; color: #fff; font-size: 15px; transition: var(--transition); margin-bottom: 16px; }
+.form-input:focus { outline: none; border-color: var(--gold-primary); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15); background: rgba(0, 0, 0, 0.7); }
+.form-label { color: #bbb; font-size: 13px; display: block; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-select { width: 100%; padding: 14px 16px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; color: #fff; font-size: 15px; transition: var(--transition); margin-bottom: 16px; }
+.form-select:focus { outline: none; border-color: var(--gold-primary); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15); background: rgba(0, 0, 0, 0.7); }
+.form-select option { background: #1a1a1a; }
+.form-textarea { width: 100%; padding: 14px 16px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; color: #fff; font-size: 15px; transition: var(--transition); margin-bottom: 16px; resize: vertical; min-height: 100px; }
+.form-textarea:focus { outline: none; border-color: var(--gold-primary); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15); background: rgba(0, 0, 0, 0.7); }
+
+.gold-calc { background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(255, 165, 0, 0.1)); border: 2px solid rgba(212, 175, 55, 0.5); border-radius: 14px; padding: 16px 20px; margin-top: 12px; display: none; }
+.gold-calc p { color: var(--gold-primary); font-size: 15px; font-weight: 500; text-align: center; }
+
+.price-badge { background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(255, 165, 0, 0.1)); border: 2px solid rgba(212, 175, 55, 0.4); border-radius: 14px; padding: 14px 18px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; }
+.price-badge span { color: #aaa; font-size: 14px; font-weight: 500; }
+.price-badge strong { color: #FFD700; font-size: 18px; font-weight: 700; }
+
+.success-card { display: none; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(76, 175, 80, 0.4); border-radius: 20px; padding: 32px; text-align: center; backdrop-filter: blur(10px); }
+.link-box { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 12px; padding: 16px; margin: 16px 0; word-break: break-all; }
+.link-box a { color: #FFD700; text-decoration: none; font-size: 14px; }
+.btn-row { display: flex; gap: 10px; margin-top: 16px; }
+.btn-copy { flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 10px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+.btn-copy:hover { background: rgba(255, 255, 255, 0.2); }
+.btn-whatsapp { flex: 1; padding: 12px; background: #25D366; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+.btn-whatsapp:hover { background: #20BA5A; }
+
+@media (max-width: 768px) {
+  .form-section { 
+    max-width: 90%; 
+    padding: 20px 16px; 
+  }
+}
+
+@media (max-width: 480px) {
+  .form-section { 
+    max-width: 95%; 
+    padding: 16px 12px; 
+  }
+}
+</style>
+</head>
+<body class="bg-site">
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="flex items-center gap-6">
+    <a href="profile.html" class="flex items-center text-white hover:text-gold transition-all duration-300 px-3 py-2 rounded-lg hover:bg-white/10">
+      <i data-lucide="user-circle" class="w-4 h-4 mr-2"></i>
+      <span class="font-medium">Profile</span>
+    </a>
+  </div>
+  <div class="flex items-center gap-4">
+    <div id="userSection" class="flex items-center gap-2">
+      <!-- User info will be populated here -->
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="form-section">
+  <div class="card-gold p-8" id="formCard">
+    <h2 class="text-3xl font-bold text-gold text-center mb-2">🪙 Send Gold</h2>
+    <p class="text-gray-400 text-center mb-6">Send gold as easily as sending a link</p>
+
+    <div class="price-badge">
+      <span>Live Gold Price</span>
+      <strong id="livePrice">Loading...</strong>
+    </div>
+
+    <div id="msgBox" class="hidden p-4 rounded-lg mb-4 text-center text-sm"></div>
+
+    <form id="goldForm">
+      <div class="form-label">Your Name</div>
+      <input type="text" id="senderName" class="form-input" placeholder="Your full name" required>
+      
+      <div class="form-label">Your Email</div>
+      <input type="email" id="senderEmail" class="form-input" placeholder="your@email.com" required>
+      
+      <div class="form-label">Amount (₹)</div>
+      <select id="amount" class="form-select" onchange="calculateGold()" required>
+        <option value="">Select amount</option>
+        <option value="501">₹501</option>
+        <option value="1100">₹1,100</option>
+        <option value="2100">₹2,100</option>
+        <option value="5100">₹5,100</option>
+        <option value="11000">₹11,000</option>
+        <option value="custom">Custom Amount</option>
+      </select>
+      
+      <div id="customDiv" class="hidden">
+        <input type="number" id="customAmount" class="form-input" placeholder="Enter custom amount" min="501">
+      </div>
+      
+      <div id="goldCalc" class="gold-calc">
+        <p> You are sending <strong id="goldGrams">0</strong>g of gold</p>
+        <p class="text-gray-400 text-xs mt-2">Real gold on Solana blockchain</p>
+      </div>
+      
+      <div class="form-label">Recipient Email</div>
+      <input type="email" id="recipientEmail" class="form-input" placeholder="recipient@email.com">
+      
+      <div class="form-label">Message (Optional)</div>
+      <textarea id="message" class="form-textarea" placeholder="Add a personal message..."></textarea>
+      
+      <button type="submit" class="btn-gold w-full py-4 rounded-lg font-bold text-lg">
+        <i data-lucide="send" class="w-5 h-5 inline mr-2"></i>
+        Send Gold Link
+      </button>
+    </form>
+    
+    <p class="text-gray-500 text-xs text-center mt-4">Powered by Oro GRAIL | Solana Devnet</p>
+  </div>
+
+  <div class="success-card" id="successCard">
+    <h3 class="text-2xl font-bold text-green-400 mb-4"> Gold Link Created!</h3>
+    <div class="link-box">
+      <a id="goldLink" href="#" target="_blank"></a>
+    </div>
+    <div class="btn-row">
+      <button onclick="copyLink()" class="btn-copy">
+        <i data-lucide="copy" class="w-4 h-4 inline mr-1"></i>
+        Copy Link
+      </button>
+      <a id="whatsappLink" href="#" class="btn-whatsapp" target="_blank">
+        <i data-lucide="message-circle" class="w-4 h-4 inline mr-1"></i>
+        Share on WhatsApp
+      </a>
+    </div>
+    <button onclick="createAnother()" class="btn-outline-gold w-full py-3 rounded-lg font-bold mt-4">
+      Create Another Link
+    </button>
+  </div>
+</div>
+
+<script>
+// Check if user is logged in
+const user = JSON.parse(localStorage.getItem('glink_user'))
+if (!user) {
+  alert('Please login first to send gold!')
+  window.location.href = 'login.html'
+}
+
+// Update header based on login status
+function updateHeader() {
+  const userSection = document.getElementById('userSection')
+  if (user) {
+    userSection.innerHTML = `
+      <div class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gold">
+        <i data-lucide="user" class="w-4 h-4 text-gold"></i>
+        <span class="text-gold text-sm">${user.name || user.email}</span>
+        <button onclick="logout()" class="text-red-400 hover:text-red-300 transition">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+    `
+  }
+}
+
+function logout() {
+  localStorage.removeItem('glink_user')
+  window.location.href = 'index.html'
+}
+
+updateHeader()
+
+// Pre-fill user details
+document.addEventListener('DOMContentLoaded', () => {
+  if (user) {
+    document.getElementById('senderName').value = user.name || ''
+    document.getElementById('senderEmail').value = user.email || ''
+  }
+  
+  // Initialize Lucide icons
+  lucide.createIcons()
+})
+
+let pricePerGram = 7200
+
+async function loadPrice() {
+  try {
+    const res = await fetch('/api/gold/price')
+    const data = await res.json()
+    pricePerGram = data.price_inr_per_gram
+    document.getElementById('livePrice').textContent = '₹' + pricePerGram.toLocaleString() + '/gram'
+  } catch(e) {
+    document.getElementById('livePrice').textContent = '₹7,200/gram'
+  }
+}
+
+function calculateGold() {
+  const amountSelect = document.getElementById('amount')
+  const customDiv = document.getElementById('customDiv')
+  const goldCalc = document.getElementById('goldCalc')
+  
+  let amount = 0
+  
+  if (amountSelect.value === 'custom') {
+    customDiv.style.display = 'block'
+    amount = parseFloat(document.getElementById('customAmount').value) || 0
+  } else {
+    customDiv.style.display = 'none'
+    amount = parseFloat(amountSelect.value) || 0
+  }
+  
+  if (amount > 0) {
+    const grams = (amount / pricePerGram).toFixed(4)
+    document.getElementById('goldGrams').textContent = grams
+    goldCalc.style.display = 'block'
+  } else {
+    goldCalc.style.display = 'none'
+  }
+}
+
+// Custom amount input handler
+document.getElementById('customAmount')?.addEventListener('input', calculateGold)
+
+// Form submission
+document.getElementById('goldForm').addEventListener('submit', async (e) => {
+  e.preventDefault()
+  
+  const senderName = document.getElementById('senderName').value.trim()
+  const senderEmail = document.getElementById('senderEmail').value.trim()
+  const recipientEmail = document.getElementById('recipientEmail').value.trim()
+  const message = document.getElementById('message').value.trim()
+  
+  let amount = 0
+  if (document.getElementById('amount').value === 'custom') {
+    amount = parseFloat(document.getElementById('customAmount').value) || 0
+  } else {
+    amount = parseFloat(document.getElementById('amount').value) || 0
+  }
+  
+  if (!senderName || !senderEmail || !amount) {
+    showMsg('Please fill all required fields', 'error')
+    return
+  }
+  
+  await showPaymentModal(amount, senderName, senderEmail, recipientEmail, message)
+})
+
+async function showPaymentModal(amount, senderName, senderEmail, recipientEmail, message) {
+  const goldGrams = (amount / pricePerGram).toFixed(4)
+  const modal = document.createElement('div')
+  modal.id = 'paymentModal'
+  modal.className = 'fixed inset-0 bg-black/85 flex items-center justify-center z-50'
+  
+  modal.innerHTML = `
+    <div class="bg-gray-900 border border-gold rounded-2xl p-8 w-96 max-w-[92vw]">
+      <h3 class="text-gold text-xl font-bold text-center mb-4"> Send Gold</h3>
+      <p class="text-gray-400 text-center text-sm mb-6">Complete your gold gift</p>
+      
+      <div class="bg-gray-800 rounded-lg p-4 mb-6">
+        <div class="flex justify-between py-2 border-b border-gray-700">
+          <span class="text-gray-400">Amount</span>
+          <span class="text-white font-bold">₹${amount}</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-gray-700">
+          <span class="text-gray-400">Gold</span>
+          <span class="text-gold font-bold">${goldGrams}g</span>
+        </div>
+        <div class="flex justify-between py-2 border-b border-gray-700">
+          <span class="text-gray-400">From</span>
+          <span class="text-white">${senderName}</span>
+        </div>
+        <div class="flex justify-between py-2">
+          <span class="text-gray-400">To</span>
+          <span class="text-white">${recipientEmail}</span>
+        </div>
+      </div>
+      
+      <button onclick="processPayment(${amount},'${senderName}','${senderEmail}','${recipientEmail}','${message}')"
+        class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition mb-3">
+        � Pay with UPI / Card / NetBanking
+      </button>
+      
+      <button onclick="closePaymentModal()"
+        class="w-full bg-transparent border border-gray-600 text-gray-400 py-2 rounded-lg hover:bg-gray-800 transition">
+        Cancel
+      </button>
+    </div>
+  `
+  document.body.appendChild(modal)
+}
+
+async function processPayment(amount, senderName, senderEmail, recipientEmail, message) {
+  closePaymentModal()
+  
+  try {
+    const orderRes = await fetch('/api/payment/create-order', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ amount_inr: amount })
+    })
+    const order = await orderRes.json()
+    
+    if (!order.success) {
+      showMsg('Payment error: ' + order.error, 'error')
+      return
+    }
+    
+    // Handle test mode
+    if (order.testMode) {
+      await createLink(amount, senderName, senderEmail, recipientEmail, message, 'test_' + Date.now())
+      return
+    }
+    
+    const options = {
+      key: order.key,
+      amount: order.amount,
+      currency: 'INR',
+      name: 'G-Link Gold',
+      description: 'Gold Gift Payment',
+      order_id: order.orderId,
+      handler: async function(response) {
+        await createLink(amount, senderName, senderEmail, recipientEmail, message, response.razorpay_payment_id)
+      },
+      prefill: { name: senderName, email: senderEmail },
+      theme: { color: '#D4AF37' },
+      modal: {
+        ondismiss: function() {
+          showMsg('Payment cancelled', 'info')
+        }
+      }
+    }
+    new window.Razorpay(options).open()
+  } catch(e) {
+    showMsg('Error: ' + e.message, 'error')
+  }
+}
+
+async function createLink(amount, senderName, senderEmail, recipientEmail, message, paymentId) {
+  try {
+    const res = await fetch('/api/links/create', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        amount_inr: amount,
+        senderName: senderName,
+        senderEmail: senderEmail,
+        message: message,
+        paymentId: paymentId,
+        recipient_glink_id: recipientEmail
+      })
+    })
+    const data = await res.json()
+    if (data.success) {
+      showSuccess(data.linkId)
+    } else {
+      showMsg(data.error || 'Failed to create link', 'error')
+    }
+  } catch(e) {
+    showMsg('Error: ' + e.message, 'error')
+  }
+}
+
+function showSuccess(linkId) {
+  const baseUrl = window.location.origin
+  const linkUrl = `${baseUrl}/claim.html?id=${linkId}`
+  
+  document.getElementById('formCard').style.display = 'none'
+  document.getElementById('successCard').style.display = 'block'
+  document.getElementById('goldLink').href = linkUrl
+  document.getElementById('goldLink').textContent = linkUrl
+  
+  const whatsappText = `I sent you ${document.getElementById('goldGrams').textContent} of gold! 🪙\n\nClaim it here: ${linkUrl}`
+  document.getElementById('whatsappLink').href = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`
+  
+  // Re-initialize Lucide icons
+  lucide.createIcons()
+}
+
+function copyLink() {
+  const link = document.getElementById('goldLink').textContent
+  navigator.clipboard.writeText(link).then(() => {
+    showMsg('Link copied to clipboard!', 'success')
+  })
+}
+
+function createAnother() {
+  document.getElementById('formCard').style.display = 'block'
+  document.getElementById('successCard').style.display = 'none'
+  document.getElementById('goldForm').reset()
+  document.getElementById('goldCalc').style.display = 'none'
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModal')?.remove()
+}
+
+function showMsg(msg, type) {
+  const el = document.getElementById('msgBox')
+  el.textContent = msg
+  el.className = `p-4 rounded-lg mb-4 text-center text-sm ${
+    type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/30' :
+    type === 'error' ? 'bg-red-500/10 text-red-400 border border-red-500/30' :
+    'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+  }`
+  el.classList.remove('hidden')
+}
+
+loadPrice()
+</script>
+</body>
+</html>

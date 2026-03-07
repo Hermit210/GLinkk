@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Group Chat - G-Link</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #0a0a0a 100%); font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; color: #fff; }
+.header { background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px); border-bottom: 2px solid rgba(212, 175, 55, 0.4); padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+.logo { color: #D4AF37; font-size: 28px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 12px; }
+.logo img { width: 40px; height: 40px; filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.3)); }
+.header-nav { display: flex; gap: 24px; align-items: center; }
+.header-nav a { color: #D4AF37; text-decoration: none; font-size: 16px; font-weight: 500; padding: 10px 20px; border-radius: 10px; transition: all 0.3s; border: 1px solid transparent; }
+.header-nav a:hover { background: rgba(212, 175, 55, 0.15); border-color: rgba(212, 175, 55, 0.3); }
+.user-info { display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.3); }
+.user-info span { color: #FFD700; font-size: 14px; font-weight: 500; }
+.btn-logout { background: rgba(244, 67, 54, 0.2); color: #ff6b6b; border: 1px solid rgba(244, 67, 54, 0.3); padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all 0.3s; }
+.btn-logout:hover { background: rgba(244, 67, 54, 0.3); }
+.chat-container { display: flex; height: calc(100vh - 70px); }
+.sidebar { width: 300px; background: rgba(0, 0, 0, 0.8); border-right: 1px solid rgba(212, 175, 55, 0.3); overflow-y: auto; }
+.sidebar-header { padding: 20px; border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
+.sidebar-title { color: #FFD700; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+.group-list { padding: 10px; }
+.group-item { padding: 12px 16px; margin-bottom: 8px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; cursor: pointer; transition: all 0.3s; border: 1px solid transparent; }
+.group-item:hover { background: rgba(212, 175, 55, 0.2); border-color: rgba(212, 175, 55, 0.4); }
+.group-item.active { background: rgba(212, 175, 55, 0.3); border-color: rgba(212, 175, 55, 0.6); }
+.group-name { color: #fff; font-weight: 600; margin-bottom: 4px; }
+.group-last-message { color: #888; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.group-time { color: #666; font-size: 11px; float: right; }
+.chat-area { flex: 1; display: flex; flex-direction: column; }
+.chat-header { padding: 20px; background: rgba(0, 0, 0, 0.8); border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
+.chat-group-name { color: #FFD700; font-size: 20px; font-weight: bold; }
+.chat-group-info { color: #888; font-size: 14px; margin-top: 4px; }
+.messages-container { flex: 1; overflow-y: auto; padding: 20px; background: rgba(0, 0, 0, 0.5); }
+.message { margin-bottom: 16px; display: flex; }
+.message.sent { justify-content: flex-end; }
+.message.received { justify-content: flex-start; }
+.message-bubble { max-width: 70%; padding: 12px 16px; border-radius: 18px; word-wrap: break-word; }
+.message.sent .message-bubble { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000; }
+.message.received .message-bubble { background: rgba(212, 175, 55, 0.2); color: #fff; border: 1px solid rgba(212, 175, 55, 0.3); }
+.message-sender { font-size: 12px; color: #888; margin-bottom: 4px; }
+.message-time { font-size: 11px; color: #666; margin-top: 4px; text-align: right; }
+.message-input-container { padding: 20px; background: rgba(0, 0, 0, 0.8); border-top: 1px solid rgba(212, 175, 55, 0.3); }
+.message-input-wrapper { display: flex; gap: 12px; }
+.message-input { flex: 1; padding: 12px 16px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 25px; color: #fff; font-size: 14px; resize: none; }
+.message-input:focus { outline: none; border-color: #D4AF37; box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15); }
+.send-button { padding: 12px 20px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+.send-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4); }
+.send-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.empty-state { text-align: center; padding: 40px; color: #888; }
+.empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state-text { font-size: 16px; }
+.typing-indicator { color: #888; font-size: 12px; font-style: italic; margin-top: 8px; }
+.gold-share-btn { padding: 8px 16px; background: linear-gradient(135deg, #9945FF 0%, #14F195 100%); color: #fff; border: none; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; margin-top: 8px; transition: all 0.3s; }
+.gold-share-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(153, 69, 255, 0.4); }
+</style>
+</head>
+<body>
+<div class="header">
+<a href="index.html" class="logo">
+<img src="logo.svg" alt="G-Link Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+<span style="display:none;">🪙</span>
+G-Link
+</a>
+<div class="header-nav" id="headerNav">
+<a href="dashboard.html">Dashboard</a>
+<a href="create.html">Send Gold</a>
+<a href="groups.html">Groups</a>
+<a href="chat.html" style="background: rgba(212, 175, 55, 0.15); border-color: rgba(212, 175, 55, 0.3);">Chat</a>
+<a href="login.html">Login</a>
+</div>
+</div>
+
+<div class="chat-container">
+<div class="sidebar">
+<div class="sidebar-header">
+<div class="sidebar-title">💬 Gold Groups</div>
+<div style="color: #888; font-size: 12px;">Chat and share gold with your groups</div>
+</div>
+<div class="group-list" id="groupList">
+<!-- Groups will be loaded here -->
+</div>
+</div>
+
+<div class="chat-area">
+<div id="emptyState" class="empty-state">
+<div class="empty-state-icon">💬</div>
+<div class="empty-state-text">Select a group to start chatting</div>
+</div>
+
+<div id="chatContent" style="display: none; height: 100%; display: flex; flex-direction: column;">
+<div class="chat-header">
+<div class="chat-group-name" id="chatGroupName">Select a group</div>
+<div class="chat-group-info" id="chatGroupInfo">No group selected</div>
+<button class="gold-share-btn" onclick="showGoldShareModal()">🪙 Share Gold</button>
+</div>
+
+<div class="messages-container" id="messagesContainer">
+<!-- Messages will be loaded here -->
+</div>
+
+<div class="message-input-container">
+<div class="message-input-wrapper">
+<textarea class="message-input" id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+<button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+</div>
+<div class="typing-indicator" id="typingIndicator" style="display: none;">Someone is typing...</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Gold Share Modal -->
+<div id="goldShareModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; display: flex; align-items: center; justify-content: center;">
+<div style="background: #1a1a1a; border: 1px solid #D4AF37; border-radius: 20px; padding: 32px; width: 90%; max-width: 400px;">
+<h3 style="color: #FFD700; text-align: center; margin-bottom: 20px;">🪙 Share Gold in Group</h3>
+<div style="margin-bottom: 16px;">
+<label style="color: #bbb; font-size: 14px; display: block; margin-bottom: 8px;">Amount (₹)</label>
+<input type="number" id="goldAmount" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #fff;" placeholder="Enter amount">
+</div>
+<div style="margin-bottom: 16px;">
+<label style="color: #bbb; font-size: 14px; display: block; margin-bottom: 8px;">Message</label>
+<textarea id="goldMessage" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #fff; resize: vertical;" rows="3" placeholder="Share gold with a message..."></textarea>
+</div>
+<div style="display: flex; gap: 12px;">
+<button onclick="hideGoldShareModal()" style="flex: 1; padding: 12px; background: transparent; border: 1px solid #333; color: #888; border-radius: 8px; cursor: pointer;">Cancel</button>
+<button onclick="shareGoldInGroup()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Share Gold</button>
+</div>
+</div>
+</div>
+
+<script>
+// Check if user is logged in
+const user = JSON.parse(localStorage.getItem('glink_user'))
+if (!user) {
+alert('Please login first to access chat!')
+window.location.href = 'login.html'
+}
+
+// Update header based on login status
+function updateHeader() {
+const headerNav = document.getElementById('headerNav')
+if (user) {
+headerNav.innerHTML = `
+<a href="dashboard.html">Dashboard</a>
+<a href="create.html">Send Gold</a>
+<a href="groups.html">Groups</a>
+<a href="chat.html" style="background: rgba(212, 175, 55, 0.15); border-color: rgba(212, 175, 55, 0.3);">Chat</a>
+<div class="user-info">
+<span>👤 ${user.name || user.email}</span>
+<button class="btn-logout" onclick="logout()">Logout</button>
+</div>
+`
+}
+}
+
+function logout() {
+localStorage.removeItem('glink_user')
+localStorage.removeItem('glink_wallet')
+localStorage.removeItem('glink_wallet_name')
+window.location.href = 'index.html'
+}
+
+updateHeader()
+
+// Chat functionality
+let currentGroup = null
+let groups = []
+
+// Load groups
+async function loadGroups() {
+try {
+const res = await fetch('/api/groups')
+const data = await res.json()
+if (data.success) {
+  groups = data.groups
+  displayGroups()
+}
+} catch(error) {
+console.log('Error loading groups:', error)
+}
+}
+
+// Display groups in sidebar
+function displayGroups() {
+const groupList = document.getElementById('groupList')
+groupList.innerHTML = ''
+
+// Add example groups if no real groups
+if (groups.length === 0) {
+  groups = [
+    { group_id: 'family1', name: 'Family Gold Vault', type: 'family', member_count: 24, total_gold: 156.5 },
+    { group_id: 'wedding1', name: 'Priya & Rahul Wedding', type: 'wedding', member_count: 45, total_gold: 89.2 },
+    { group_id: 'office1', name: 'Team Celebration Fund', type: 'office', member_count: 32, total_gold: 45.8 },
+    { group_id: 'friends1', name: 'Friends Circle', type: 'friends', member_count: 18, total_gold: 67.3 }
+  ]
+}
+
+groups.forEach(group => {
+  const groupItem = document.createElement('div')
+  groupItem.className = 'group-item'
+  groupItem.onclick = () => selectGroup(group)
+  
+  const typeIcons = {
+    family: '👨‍👩‍👧‍👦',
+    wedding: '💍',
+    office: '💼',
+    friends: '🎉',
+    community: '🏘️',
+    custom: '✨'
+  }
+  
+  groupItem.innerHTML = `
+    <div class="group-name">${typeIcons[group.type] || '👥'} ${group.name}</div>
+    <div class="group-last-message">
+      <span class="group-time">2:30 PM</span>
+      Latest message about gold sharing...
+    </div>
+  `
+  
+  groupList.appendChild(groupItem)
+})
+}
+
+// Select a group
+function selectGroup(group) {
+currentGroup = group
+
+// Update active state
+document.querySelectorAll('.group-item').forEach(item => {
+  item.classList.remove('active')
+})
+event.currentTarget.classList.add('active')
+
+// Show chat content
+document.getElementById('emptyState').style.display = 'none'
+document.getElementById('chatContent').style.display = 'flex'
+
+// Update chat header
+document.getElementById('chatGroupName').textContent = group.name
+document.getElementById('chatGroupInfo').textContent = `${group.member_count} members • ${group.total_gold}g gold`
+
+// Load messages
+loadMessages()
+}
+
+// Load messages for current group
+async function loadMessages() {
+if (!currentGroup) return
+
+const messagesContainer = document.getElementById('messagesContainer')
+messagesContainer.innerHTML = ''
+
+// Load example messages
+const exampleMessages = [
+  { sender: 'Dad', message: 'I just added 10g of gold to our family vault!', time: '2:30 PM', type: 'received' },
+  { sender: 'You', message: 'That\'s amazing! I\'ll add some more this weekend', time: '2:32 PM', type: 'sent' },
+  { sender: 'Mom', message: 'Let\'s plan for the upcoming festival', time: '2:35 PM', type: 'received' },
+  { sender: 'System', message: '🪙 5g gold contributed by Uncle Raj', time: '2:40 PM', type: 'system' },
+  { sender: 'Sister', message: 'Can we use some gold for my wedding gifts?', time: '3:15 PM', type: 'received' }
+]
+
+exampleMessages.forEach(msg => {
+  addMessageToChat(msg)
+})
+
+// Scroll to bottom
+messagesContainer.scrollTop = messagesContainer.scrollHeight
+}
+
+// Add message to chat
+function addMessageToChat(message) {
+const messagesContainer = document.getElementById('messagesContainer')
+const messageDiv = document.createElement('div')
+messageDiv.className = `message ${message.type}`
+
+if (message.type === 'system') {
+  messageDiv.innerHTML = `
+    <div style="text-align: center; margin: 16px 0;">
+      <span style="background: rgba(212, 175, 55, 0.2); color: #FFD700; padding: 8px 16px; border-radius: 20px; font-size: 12px;">
+        ${message.message}
+      </span>
+    </div>
+  `
+} else {
+  messageDiv.innerHTML = `
+    <div class="message-bubble">
+      ${message.type === 'received' ? `<div class="message-sender">${message.sender}</div>` : ''}
+      <div>${message.message}</div>
+      <div class="message-time">${message.time}</div>
+    </div>
+  `
+}
+
+messagesContainer.appendChild(messageDiv)
+}
+
+// Send message
+function sendMessage() {
+const messageInput = document.getElementById('messageInput')
+const message = messageInput.value.trim()
+
+if (!message || !currentGroup) return
+
+// Add message to chat
+addMessageToChat({
+  sender: user.name || 'You',
+  message: message,
+  time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+  type: 'sent'
+})
+
+// Clear input
+messageInput.value = ''
+
+// Scroll to bottom
+document.getElementById('messagesContainer').scrollTop = document.getElementById('messagesContainer').scrollHeight
+
+// TODO: Send to server
+console.log('Sending message to group:', currentGroup.group_id, message)
+}
+
+// Gold share modal
+function showGoldShareModal() {
+if (!currentGroup) {
+  alert('Please select a group first')
+  return
+}
+document.getElementById('goldShareModal').style.display = 'flex'
+}
+
+function hideGoldShareModal() {
+document.getElementById('goldShareModal').style.display = 'none'
+document.getElementById('goldAmount').value = ''
+document.getElementById('goldMessage').value = ''
+}
+
+async function shareGoldInGroup() {
+const amount = document.getElementById('goldAmount').value
+const message = document.getElementById('goldMessage').value
+
+if (!amount || !currentGroup) return
+
+try {
+  // TODO: Implement group gold sharing API
+  console.log('Sharing gold:', { groupId: currentGroup.group_id, amount, message })
+  
+  // Add system message
+  addMessageToChat({
+    sender: 'System',
+    message: `🪙 ${amount/7200}g gold contributed by ${user.name || 'You'} - "${message || 'Gold sharing!'}"`,
+    time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+    type: 'system'
+  })
+  
+  hideGoldShareModal()
+  alert('Gold shared successfully!')
+} catch(error) {
+  alert('Error sharing gold: ' + error.message)
+}
+}
+
+// Enter key to send message
+document.getElementById('messageInput').addEventListener('keypress', (e) => {
+if (e.key === 'Enter' && !e.shiftKey) {
+  e.preventDefault()
+  sendMessage()
+}
+})
+
+// Auto-resize textarea
+document.getElementById('messageInput').addEventListener('input', function() {
+  this.style.height = 'auto'
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px'
+})
+
+// Initialize
+loadGroups()
+</script>
+</body>
+</html>

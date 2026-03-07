@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions - G-Link</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="enhanced-styles.css">
+  <style>
+    :root {
+      --gold-primary: #FFD700;
+      --gold-light: #FFED4E;
+      --gold-dark: #D4AF37;
+      --bg-black: #000000;
+      --bg-card: #0A0A0A;
+      --bg-elevated: #1A1A1A;
+      --text-light: #FFFFFF;
+      --text-muted: #FFD700;
+      --border: rgba(255, 215, 0, 0.3);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      background: linear-gradient(135deg, #000000 0%, #0A0A0A 50%, #000000 100%);
+      color: var(--text-light);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    
+    .navbar {
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 2px solid var(--border);
+      padding: 12px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      box-shadow: 0 4px 25px rgba(255, 215, 0, 0.2);
+      height: 70px;
+    }
+    
+    .logo {
+      color: var(--gold-primary);
+      font-size: 28px;
+      font-weight: 800;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-shadow: 0 2px 15px rgba(255, 215, 0, 0.5);
+    }
+    
+    .logo img {
+      width: 40px;
+      height: 40px;
+      filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.5));
+    }
+    
+    .header-nav {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    
+    .header-nav a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 10px 20px;
+      border-radius: 10px;
+      transition: var(--transition);
+      border: 1px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .header-nav a:hover {
+      background: rgba(255, 215, 0, 0.2);
+      border-color: rgba(255, 215, 0, 0.5);
+      color: var(--gold-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 120px 24px 40px;
+    }
+    
+    .section {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
+    }
+    
+    .section h3 {
+      color: var(--gold-primary);
+      margin-bottom: 24px;
+      font-size: 24px;
+      font-weight: 800;
+      text-shadow: 0 2px 15px rgba(255, 215, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .transaction-item {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: var(--transition);
+    }
+    
+    .transaction-item:hover {
+      background: rgba(255, 215, 0, 0.05);
+      padding-left: 16px;
+      padding-right: 16px;
+      margin: 0 -16px;
+      border-radius: 12px;
+    }
+    
+    .transaction-item:last-child {
+      border-bottom: none;
+    }
+    
+    .transaction-info {
+      flex: 1;
+    }
+    
+    .transaction-type {
+      color: var(--gold-primary);
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: capitalize;
+      margin-bottom: 4px;
+    }
+    
+    .transaction-date {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .transaction-amounts {
+      text-align: right;
+    }
+    
+    .transaction-gold {
+      color: var(--text-light);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .transaction-inr {
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    
+    .empty-state i {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.6;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+    
+    .btn-logout {
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--gold-primary);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: var(--transition);
+    }
+    
+    .btn-logout:hover {
+      background: var(--gold-primary);
+      color: var(--bg-black);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .user-name {
+      color: var(--gold-primary);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 100px 16px 24px;
+      }
+      
+      .section {
+        padding: 20px;
+      }
+      
+      .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      
+      .transaction-amounts {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a href="dashboard.html" class="logo">
+      <img src="logo.svg" alt="G-Link Logo">
+      G-Link
+    </a>
+    <nav class="header-nav">
+      <a href="create.html">
+        <i data-lucide="plus" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+        Create
+      </a>
+      <a href="dashboard.html">
+        <i data-lucide="home" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+        Dashboard
+      </a>
+      <a href="profile.html">
+        <i data-lucide="user" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+        Profile
+      </a>
+      <span class="user-name" id="userName">Loading...</span>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="section">
+      <h3>
+        <i data-lucide="activity" style="width: 24px; height: 24px;"></i>
+        Recent Transactions
+      </h3>
+      <div id="transactions">
+        <div class="loading">
+          <i data-lucide="loader" style="width: 32px; height: 32px; animation: spin 1s linear infinite;"></i>
+          <p>Loading transactions...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Authentication check
+    function getUser() {
+      try {
+        const userData = localStorage.getItem('glink_user');
+        if (!userData || userData === 'null' || userData === 'undefined') {
+          return null;
+        }
+        return JSON.parse(userData);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        return null;
+      }
+    }
+
+    const user = getUser();
+    if (!user) {
+      window.location.href = 'login.html';
+    }
+
+    // Update user name
+    if (document.getElementById('userName')) {
+      document.getElementById('userName').textContent = user?.name || user?.email || 'User';
+    }
+
+    // Load transactions
+    async function loadTransactions() {
+      try {
+        const response = await fetch(`/api/transactions?email=${encodeURIComponent(user.email)}`);
+        const data = await response.json();
+        
+        if (data.success && data.transactions && data.transactions.length > 0) {
+          const transactionsHtml = data.transactions.map(t => `
+            <div class="transaction-item">
+              <div class="transaction-info">
+                <div class="transaction-type">${t.type.replace(/_/g, ' ')}</div>
+                <div class="transaction-date">${new Date(t.created_at).toLocaleDateString('en-IN')}</div>
+              </div>
+              <div class="transaction-amounts">
+                <div class="transaction-gold">${(t.gold_grams || 0).toFixed(4)}g</div>
+                <div class="transaction-inr">₹${(t.amount_inr || 0).toLocaleString()}</div>
+              </div>
+            </div>
+          `).join('');
+          
+          document.getElementById('transactions').innerHTML = transactionsHtml;
+        } else {
+          document.getElementById('transactions').innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="inbox"></i>
+              <h4>No transactions yet</h4>
+              <p>Send your first gold blessing to see transactions here.</p>
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Error loading transactions:', error);
+        document.getElementById('transactions').innerHTML = `
+          <div class="empty-state">
+            <i data-lucide="alert-circle"></i>
+            <h4>Unable to load transactions</h4>
+            <p>Please try again later.</p>
+          </div>
+        `;
+      }
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('glink_user');
+        localStorage.removeItem('glink_wallet');
+        localStorage.removeItem('glink_wallet_name');
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Initialize
+    loadTransactions();
+    lucide.createIcons();
+  </script>
+
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>
