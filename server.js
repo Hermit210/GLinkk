@@ -885,7 +885,7 @@ app.post('/api/links/create', async (req, res) => {
     if (recipient_glink_id) {
       try {
         console.log('Sending email to:', recipient_glink_id)
-        const claimLink = `${process.env.BASE_URL || 'http://localhost:3000'}/claim.html?id=${linkId}`
+        const claimLink = `${process.env.BASE_URL || 'https://glink-n0y9.onrender.com'}/claim.html?id=${linkId}`
         console.log('Claim link:', claimLink)
         const emailHtml = `
           <div style="background:#1a1a1a;padding:30px;border-radius:12px;font-family:Arial;color:#fff;max-width:500px;margin:0 auto">
@@ -1871,7 +1871,7 @@ app.post('/api/blessing/create', async (req, res) => {
     }
 
     const id = nanoid(10)
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+    const baseUrl = process.env.BASE_URL || 'https://glink-n0y9.onrender.com'
     const link = baseUrl + '/blessing.html?id=' + id
 
     const { error } = await supabase.from('gold_blessings').insert([{
@@ -2058,7 +2058,7 @@ app.post('/api/blessing/:id/send', async (req, res) => {
     // Send email to page owner
     if (blessing.email) {
       try {
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+        const baseUrl = process.env.BASE_URL || 'https://glink-n0y9.onrender.com'
         await transporter.sendMail({
           from: '"G-Link Gold" <' + process.env.EMAIL_USER + '>',
           to: blessing.email,
