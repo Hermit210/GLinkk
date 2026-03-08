@@ -1914,7 +1914,7 @@ app.post('/api/blessing/create', async (req, res) => {
     }
 
     const id = nanoid(10)
-    const baseUrl = 'https://glink-n0y9.onrender.com'
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
     const link = baseUrl + '/blessing.html?id=' + id
 
     const { error } = await supabase.from('gold_blessings').insert([{
