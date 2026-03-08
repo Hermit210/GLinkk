@@ -1,234 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - G-Link</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<link rel="stylesheet" href="enhanced-styles.css">
-<style>
-  :root {
-    --gold-primary: #D4AF37;
-    --gold-light: #F4D03F;
-    --gold-dark: #B8941E;
-    --bg-dark: #0a0a0a;
-    --bg-card: #161616;
-    --bg-elevated: #1f1f1f;
-    --text-light: #f0f0f0;
-    --text-muted: #a0a0a0;
-    --border-gold: rgba(212, 175, 55, 0.3);
-    --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .bg-site { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); }
-  .text-gold { color: var(--gold-primary); }
-  .bg-gold { background: var(--gold-primary); }
-  .hover\:bg-gold:hover { background: var(--gold-dark); }
-  .text-white { color: #fff; }
-  .text-gray-400 { color: var(--text-muted); }
-  .text-red-400 { color: #f44336; }
-  .text-green-400 { color: #4CAF50; }
-  .text-blue-400 { color: #64B5F6; }
-  .bg-gray-700 { background: #333; }
-  .bg-gray-800 { background: #1a1a1a; }
-  .bg-gray-600 { background: #555; }
-  .hover\:bg-gray-500:hover { background: #666; }
-  .border-gray-600 { border-color: #333; }
-  .focus\:border-gold:focus { border-color: var(--gold-primary); }
-  .card-gold { background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 20px; box-shadow: var(--shadow-gold); transition: var(--transition); }
-  .card-gold:hover { transform: translateY(-5px); border-color: var(--gold-light); box-shadow: 0 8px 30px rgba(212, 175, 55, 0.2); }
-  .btn-gold { background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%); color: #000; font-weight: 700; transition: var(--transition); }
-  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
-  .btn-outline-gold { background: transparent; border: 2px solid var(--gold-primary); color: var(--gold-primary); font-weight: 700; transition: var(--transition); }
-  .btn-outline-gold:hover { background: var(--gold-primary); color: #000; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - G-Link</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            gold: {
+              DEFAULT: '#FFD700',
+              light: '#FFED4E',
+              dark: '#FFA500',
+            },
+            dark: {
+              DEFAULT: '#0a0a0a',
+              card: '#111111',
+              border: '#222222'
+            }
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0a0a0a;
+      color: #ffffff;
+    }
 
-  /* Mobile responsive */
-  @media (max-width: 768px) {
-    .login-container { padding: 20px; }
-    .card-gold { padding: 24px; }
-    .hero h1 { font-size: 32px; }
-  }
-</style>
+    .bg-site {
+      background-image: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.1) 0%, transparent 50%);
+    }
+
+    /* Custom inputs */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #111111 inset !important;
+      -webkit-text-fill-color: white !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+  </style>
 </head>
-<body class="text-white font-sans" style="background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #0a0a0a 100%); min-height: 100vh;">
-  <header class="bg-black bg-opacity-50 backdrop-blur-md py-4 px-6 fixed w-full z-10 shadow-lg">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
-      <a href="index.html" class="flex items-center text-gold font-bold text-xl hover:text-gold transition">
-        <img src="logo.svg" alt="G-Link Logo" class="w-8 h-8 mr-2">
+
+<body class="antialiased font-sans flex flex-col min-h-screen selection:bg-gold selection:text-black">
+
+  <!-- Navigation -->
+  <nav class="absolute w-full z-50 px-6 py-6 flex justify-between items-center" id="navbar">
+    <a href="/" class="text-2xl font-bold tracking-tight text-white flex items-center gap-2 group">
+      <span class="text-gold group-hover:rotate-12 transition-transform duration-300">🪙</span>
+      G-Link
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="signup.html"
+        class="bg-white/10 backdrop-blur-md text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-white hover:text-black transition-colors duration-300 tracking-wide border border-white/20">
+        Sign Up
       </a>
-      <button id="menuToggle" class="text-white hover:text-gold transition md:hidden">
-        <i data-lucide="menu" class="w-6 h-6"></i>
-      </button>
-      <nav id="navMenu" class="hidden md:flex space-x-8">
-        <a href="index.html" class="flex items-center text-white hover:text-gold transition">
-          <i data-lucide="home" class="w-5 h-5 mr-2"></i>
-          Home
+    </div>
+  </nav>
+
+  <!-- Login Main Area -->
+  <main class="flex-grow flex items-center justify-center p-6 bg-site">
+    <div class="w-full max-w-[420px] animate-fade-in-up">
+
+      <!-- Header -->
+      <div class="text-center mb-10">
+        <div
+          class="w-16 h-16 rounded-full bg-dark-card border border-dark-border flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(255,215,0,0.1)]">
+          <span class="text-3xl text-gold">🪙</span>
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight mb-2">Welcome Back</h1>
+        <p class="text-gray-400 font-medium">Log in securely to access your gold vault.</p>
+      </div>
+
+      <!-- Login Card -->
+      <div
+        class="bg-dark-card backdrop-blur-xl border border-dark-border rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+        <!-- Subtle gradient overlay -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-gold/10 blur-3xl rounded-full pointer-events-none"></div>
+
+        <div class="text-center mb-6" id="msg2" style="display: none;"></div>
+
+        <!-- Google Login Button -->
+        <a href="/auth/google"
+          class="w-full flex items-center justify-center gap-3 bg-white text-black py-3.5 px-4 rounded-xl font-bold hover:bg-gray-100 transition-colors duration-200 mb-6 group shadow-lg">
+          <img src="https://www.google.com/favicon.ico" class="w-5 h-5 group-hover:scale-110 transition-transform">
+          Continue with Google
         </a>
-        <a href="signup.html" class="flex items-center text-white hover:text-gold transition">
-          <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>
-          Sign Up
-        </a>
-        <button id="themeToggle" class="text-white hover:text-gold transition">
-          <i data-lucide="moon" class="w-5 h-5"></i>
-        </button>
-      </nav>
-      <!-- Mobile Menu -->
-      <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gold pt-4">
-        <nav class="flex flex-col space-y-3">
-          <a href="index.html" class="flex items-center text-white hover:text-gold transition py-2">
-            <i data-lucide="home" class="w-5 h-5 mr-3"></i>
-            Home
-          </a>
-          <a href="signup.html" class="flex items-center text-white hover:text-gold transition py-2">
-            <i data-lucide="user-plus" class="w-5 h-5 mr-3"></i>
-            Sign Up
-          </a>
-          <button id="themeToggleMobile" class="flex items-center text-white hover:text-gold transition py-2">
-            <i data-lucide="moon" class="w-5 h-5 mr-3"></i>
-            Toggle Theme
+
+        <!-- Divider -->
+        <div class="flex items-center my-6">
+          <div class="flex-grow h-px bg-dark-border"></div>
+          <span class="px-4 text-xs font-bold text-gray-500 uppercase tracking-widest">or email</span>
+          <div class="flex-grow h-px bg-dark-border"></div>
+        </div>
+
+        <!-- Email Form -->
+        <form onsubmit="login(); return false;" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Email Address
+            </label>
+            <div class="relative">
+              <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"></i>
+              <input type="email" id="email" placeholder="you@example.com"
+                class="w-full pl-12 pr-4 py-3.5 bg-dark border border-dark-border text-white rounded-xl focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition-all placeholder:text-gray-600"
+                required>
+            </div>
+          </div>
+
+          <div class="pb-2">
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Password
+            </label>
+            <div class="relative">
+              <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"></i>
+              <input type="password" id="password" placeholder="••••••••"
+                class="w-full pl-12 pr-4 py-3.5 bg-dark border border-dark-border text-white rounded-xl focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition-all placeholder:text-gray-600"
+                required>
+            </div>
+          </div>
+
+          <button type="submit"
+            class="w-full bg-gold text-black font-bold py-4 px-6 rounded-xl hover:bg-gold-light hover:scale-[1.02] shadow-[0_0_20px_rgba(255,215,0,0.2)] transition-all duration-300 ease-out flex justify-center items-center gap-2 group">
+            Log In
+            <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
           </button>
-        </nav>
+        </form>
       </div>
+
     </div>
-  </header>
+  </main>
 
-<div class="flex items-center justify-center p-4 min-h-screen pt-24">
-<div class="w-full max-w-md login-container">
-  <div class="text-center mb-8">
-    <img src="logo.svg" alt="G-Link Logo" class="w-20 h-20 mx-auto mb-4 animate-bounce-in">
-    <h1 class="text-3xl md:text-4xl font-bold text-gold mb-2">Welcome Back</h1>
-    <p class="text-gray-400 text-sm md:text-base">Login to access your gold vault</p>
-  </div>
-  <div class="card-gold p-6 md:p-8">
-    <h2 class="text-xl md:text-2xl font-semibold text-white mb-6 text-center flex items-center justify-center">
-      <i data-lucide="mail" class="w-5 h-5 md:w-6 md:h-6 mr-2 text-gold"></i>
-      Login with Email
-    </h2>
-    <div class="text-center mb-4" id="msg2"></div>
-    
-    <!-- Google Login Button -->
-    <a href="/auth/google" style="
-      display:flex;align-items:center;justify-content:center;
-      gap:12px;width:100%;padding:14px;margin-bottom:16px;
-      background:#fff;color:#333;border:none;
-      border-radius:12px;text-decoration:none;
-      font-size:15px;font-weight:600;cursor:pointer;
-      box-shadow:0 2px 8px rgba(0,0,0,0.3)">
-      <img src="https://www.google.com/favicon.ico" width="20" height="20">
-      Continue with Google
-    </a>
-
-    <div style="text-align:center;color:#555;
-      margin-bottom:16px;font-size:14px">
-      ── or ──
-    </div>
-    
-    <form onsubmit="login(); return false;">
-      <div class="mb-4">
-        <label class="block text-white mb-2 flex items-center">
-          <i data-lucide="at-sign" class="w-4 h-4 mr-2 text-gold"></i>
-          Email
-        </label>
-        <input type="email" id="email" placeholder="your@email.com" class="w-full p-3 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-gold focus:outline-none transition" required>
-      </div>
-      <div class="mb-6">
-        <label class="block text-white mb-2 flex items-center">
-          <i data-lucide="lock" class="w-4 h-4 mr-2 text-gold"></i>
-          Password
-        </label>
-        <input type="password" id="password" placeholder="Your password" class="w-full p-3 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-gold focus:outline-none transition" required>
-      </div>
-      <button type="submit" class="w-full btn-gold py-3 md:py-4 px-6 rounded-xl hover:bg-gold transition duration-200 text-sm md:text-base">
-        <i data-lucide="log-in" class="w-4 h-4 md:w-5 md:h-5 mr-2"></i>
-        Login
-      </button>
-    </form>
-    <a href="signup.html" class="block text-center text-gray-400 hover:text-white mt-4 transition text-sm">
-      <i data-lucide="user-plus" class="w-4 h-4 mr-1"></i>
-      No account? Sign Up →
-    </a>
-    <p class="text-center text-gray-400 text-xs mt-6">Powered by Oro GRAIL | Solana Blockchain</p>
-  </div>
-</div>
-
-<script>
-lucide.createIcons();
-
-// Mobile menu toggle
-const menuToggle = document.getElementById('menuToggle');
-const mobileMenu = document.getElementById('mobileMenu');
-if (menuToggle && mobileMenu) {
-  menuToggle.addEventListener('click', () => {
-    mobileMenu.classList.toggle('hidden');
-    const icon = menuToggle.querySelector('i');
-    if (mobileMenu.classList.contains('hidden')) {
-      icon.setAttribute('data-lucide', 'menu');
-    } else {
-      icon.setAttribute('data-lucide', 'x');
-    }
+  <script>
     lucide.createIcons();
-  });
-}
 
-// Theme toggle
-const themeToggle = document.getElementById('themeToggle');
-const themeToggleMobile = document.getElementById('themeToggleMobile');
+    async function login() {
+      const email = document.getElementById('email').value.trim()
+      const password = document.getElementById('password').value.trim()
 
-function toggleTheme() {
-  document.body.classList.toggle('light-theme');
-  const icons = document.querySelectorAll('#themeToggle i, #themeToggleMobile i');
-  icons.forEach(icon => {
-    if (document.body.classList.contains('light-theme')) {
-      icon.setAttribute('data-lucide', 'sun');
-    } else {
-      icon.setAttribute('data-lucide', 'moon');
+      if (!email || !password) {
+        showMsg('Please fill all fields', 'err', 'msg2');
+        return;
+      }
+
+      showMsg('Logging in...', 'info', 'msg2')
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        })
+        const data = await res.json()
+        if (data.success) {
+          localStorage.setItem('glink_user', JSON.stringify(data.user))
+          showMsg('Welcome back! Redirecting...', 'ok', 'msg2')
+          setTimeout(() => window.location.href = 'dashboard.html', 1500)
+        } else {
+          showMsg(data.error || 'Invalid credentials', 'err', 'msg2')
+        }
+      } catch (e) {
+        showMsg('Login failed: ' + e.message, 'err', 'msg2')
+      }
     }
-  });
-  lucide.createIcons();
-}
 
-if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
-if (themeToggleMobile) themeToggleMobile.addEventListener('click', toggleTheme);
+    function showMsg(msg, type, id = 'msg2') {
+      const el = document.getElementById(id)
+      el.textContent = msg
 
-async function login() {
-  const email = document.getElementById('email').value.trim()
-  const password = document.getElementById('password').value.trim()
-  if (!email || !password) { showMsg('Please fill all fields', 'err', 'msg2'); return }
-  showMsg('Logging in...', 'info', 'msg2')
-  try {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ email, password })
-    })
-    const data = await res.json()
-    if (data.success) {
-      localStorage.setItem('glink_user', JSON.stringify(data.user))
-      showMsg('Welcome back! Redirecting...', 'ok', 'msg2')
-      setTimeout(() => window.location.href = 'dashboard.html', 1500)
-    } else {
-      showMsg(data.error || 'Invalid credentials', 'err', 'msg2')
+      // Base styles
+      let baseClass = 'text-sm font-semibold mb-6 p-3 rounded-lg border flex items-center justify-center gap-2 animate-fade-in-up '
+
+      if (type === 'ok') {
+        el.className = baseClass + 'text-green-400 bg-green-500/10 border-green-500/20'
+      } else if (type === 'err') {
+        el.className = baseClass + 'text-red-400 bg-red-500/10 border-red-500/20'
+      } else {
+        el.className = baseClass + 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+      }
+
+      el.style.display = 'block'
     }
-  } catch(e) {
-    showMsg('Login failed: ' + e.message, 'err', 'msg2')
-  }
-}
 
-function showMsg(msg, type, id = 'msg') {
-  const el = document.getElementById(id)
-  el.textContent = msg
-  el.className = 'text-center mb-4 p-3 rounded-xl ' + 
-    (type === 'ok' ? 'text-green-400 bg-green-900 border border-green-600' : 
-     type === 'err' ? 'text-red-400 bg-red-900 border border-red-600' : 
-     'text-blue-400 bg-blue-900 border border-blue-600')
-  el.style.display = 'block'
-}
-
-document.addEventListener('keypress', e => {
-  if (e.key === 'Enter') login()
-})
-</script>
+    document.addEventListener('keypress', e => {
+      if (e.key === 'Enter') login()
+    });
+  </script>
 </body>
+
 </html>

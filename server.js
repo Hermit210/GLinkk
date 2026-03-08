@@ -20,11 +20,21 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${BASE_URL}/auth/google/callback`
+const SESSION_SECRET = process.env.SESSION_SECRET || 'glink_secret_key_2024'
+const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+
 app.use(session({
-  secret: 'glink_secret_key_2024',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: IS_PRODUCTION
+  }
 }))
 app.use(passport.initialize())
 app.use(passport.session())
@@ -32,38 +42,38 @@ app.use(passport.session())
 app.get('/api/test-grail', async (req, res) => {
   try {
     const results = {}
-    
+
     // Test gold price
     try {
       const price = await grail.get('/api/trading/gold/price')
       results.goldPrice = 'OK: ' + JSON.stringify(price.data)
-    } catch(e) {
+    } catch (e) {
       results.goldPrice = 'FAILED: ' + e.message
     }
-    
+
     // Test create user
     try {
       const { Keypair } = require('@solana/web3.js')
       const crypto = require('crypto')
       const wallet = Keypair.generate()
       const kycHash = generateKycHash('test@example.com', '9999999999')
-      
+
       const user = await grail.post('/api/users', {
         kycHash: kycHash,
         userWalletAddress: wallet.publicKey.toString(),
         metadata: { referenceId: 'test_' + Date.now() }
       })
       results.createUser = 'OK: ' + JSON.stringify(user.data)
-    } catch(e) {
+    } catch (e) {
       results.createUser = 'FAILED: ' + e.message
       if (e.response) {
         results.createUserError = e.response.data
         results.createUserStatus = e.response.status
       }
     }
-    
+
     res.json(results)
-  } catch(e) {
+  } catch (e) {
     res.json({ error: e.message })
   }
 })
@@ -97,7 +107,7 @@ const razorpay = new Razorpay({
 })
 
 // Twilio client for SMS
-const twilioClient = process.env.TWILIO_ACCOUNT_SID ? 
+const twilioClient = process.env.TWILIO_ACCOUNT_SID ?
   twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null
 
 // SMS sending function
@@ -106,7 +116,7 @@ async function sendSMS(to, message) {
     console.log('SMS not configured - would send to:', to, 'Message:', message)
     return false
   }
-  
+
   try {
     await twilioClient.messages.create({
       body: message,
@@ -115,7 +125,7 @@ async function sendSMS(to, message) {
     })
     console.log('SMS sent successfully to:', to)
     return true
-  } catch(error) {
+  } catch (error) {
     console.log('SMS sending failed:', error.message)
     return false
   }
@@ -135,16 +145,16 @@ app.post('/api/payment/create-order', async (req, res) => {
     console.log('Payment order request:', amount_inr)
     console.log('Razorpay key exists:', !!process.env.RAZORPAY_KEY_ID)
     console.log('Razorpay key value:', process.env.RAZORPAY_KEY_ID)
-    
+
     if (!amount_inr || isNaN(parseFloat(amount_inr))) {
       return res.status(400).json({
         success: false,
         error: 'Invalid amount provided'
       })
     }
-    
-    if (!process.env.RAZORPAY_KEY_ID || 
-        process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder') {
+
+    if (!process.env.RAZORPAY_KEY_ID ||
+      process.env.RAZORPAY_KEY_ID === 'rzp_test_placeholder') {
       return res.json({
         success: true,
         testMode: true,
@@ -155,15 +165,15 @@ app.post('/api/payment/create-order', async (req, res) => {
         message: 'Test mode - payment will be simulated'
       })
     }
-    
+
     const order = await razorpay.orders.create({
       amount: Math.round(parseFloat(amount_inr) * 100),
       currency: 'INR',
       receipt: 'glink_' + Date.now()
     })
-    
+
     console.log('Order created successfully:', order.id)
-    
+
     res.json({
       success: true,
       orderId: order.id,
@@ -171,15 +181,15 @@ app.post('/api/payment/create-order', async (req, res) => {
       currency: order.currency,
       key: process.env.RAZORPAY_KEY_ID
     })
-  } catch(e) {
+  } catch (e) {
     console.log('=== Razorpay Order Creation Error ===');
     console.log('Error message:', e.message);
     console.log('Error type:', e.type);
     console.log('Error code:', e.code);
     console.log('Full error:', e);
-    
-    res.status(500).json({ 
-      success: false, 
+
+    res.status(500).json({
+      success: false,
       error: e.message || 'Payment order creation failed',
       details: e.type || 'Unknown error'
     })
@@ -197,7 +207,7 @@ app.post('/api/payment/verify', async (req, res) => {
     const valid = expected === signature
     console.log('Payment verified:', valid)
     res.json({ success: valid })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -231,7 +241,7 @@ function base58Encode(buf) {
 async function signAndSubmit(txBase64) {
   try {
     const { Connection, Keypair, Transaction, clusterApiUrl } = require('@solana/web3.js')
-    
+
     function base58Decode(str) {
       const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
       let val = 0n
@@ -241,48 +251,48 @@ async function signAndSubmit(txBase64) {
       while (bytes.length < 64) bytes.unshift(0)
       return new Uint8Array(bytes)
     }
-    
+
     console.log('signAndSubmit: Starting...')
     const secretKey = base58Decode(process.env.EXECUTIVE_KEYPAIR)
     const keypair = Keypair.fromSecretKey(secretKey)
     console.log('Executive wallet:', keypair.publicKey.toString())
-    
+
     const connection = new Connection(clusterApiUrl('devnet'), 'confirmed')
     const txBuffer = Buffer.from(txBase64, 'base64')
     const transaction = Transaction.from(txBuffer)
-    
+
     transaction.partialSign(keypair)
     console.log('Transaction signed!')
-    
+
     const serialized = transaction.serialize({ requireAllSignatures: false })
     const signed = serialized.toString('base64')
-    
+
     // Submit through GRAIL API instead of direct Solana submission
     const response = await grail.post('/api/transactions/submit', {
       signedTransaction: signed
     })
-    
+
     console.log('GRAIL submit response:', JSON.stringify(response.data))
-    
+
     // Extract signature with fallback options
     const signature = response.data?.data?.transaction?.signature ||
-                      response.data?.data?.transaction?.transactionId ||
-                      response.data?.data?.signature
-    
+      response.data?.data?.transaction?.transactionId ||
+      response.data?.data?.signature
+
     if (signature) {
       console.log('✅ TX submitted via GRAIL!')
       console.log('✅ Signature:', signature)
       console.log('✅ Solscan: https://solscan.io/tx/' + signature + '?cluster=devnet')
-      
+
       // Still confirm on Solana for reliability
       await connection.confirmTransaction(signature, 'confirmed')
       console.log('✅ TX confirmed on devnet!')
-      
+
       return { success: true, signature }
     } else {
       throw new Error('No signature returned from GRAIL')
     }
-  } catch(e) {
+  } catch (e) {
     console.log('signAndSubmit error:', e.message)
     return { success: false, error: e.message }
   }
@@ -293,12 +303,12 @@ function base58Encode(buffer) {
   const alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
   let result = ''
   let num = BigInt('0x' + Buffer.from(buffer).toString('hex'))
-  
+
   while (num > 0n) {
     result = alphabet[Number(num % 58n)] + result
     num = num / 58n
   }
-  
+
   // Handle leading zeros
   for (const byte of buffer) {
     if (byte === 0) {
@@ -307,7 +317,7 @@ function base58Encode(buffer) {
       break
     }
   }
-  
+
   return result
 }
 
@@ -320,17 +330,17 @@ function generateKycHash(email, phone) {
 async function createGrailUser(email, phone) {
   try {
     console.log('Creating GRAIL user for:', email)
-    
+
     // Generate proper KYC hash - use email + phone + timestamp for uniqueness
     const crypto = require('crypto')
     const timestamp = Date.now().toString()
     const hashInput = email + (phone || '') + timestamp
     const hash = crypto.createHash('sha256').update(hashInput).digest()
     const kycHash = base58Encode(hash)
-    
+
     console.log('Generated KYC hash:', kycHash)
     console.log('Hash input:', hashInput)
-    
+
     // Generate a unique user wallet address for this user
     // For self-custody partners, this should be the user's actual wallet
     // For now, we'll create a unique address based on the email
@@ -338,9 +348,9 @@ async function createGrailUser(email, phone) {
     const userWalletBytes = new Uint8Array(32)
     userWalletBytes.set(userWalletHash.slice(0, 32))
     const userWalletAddress = base58Encode(userWalletBytes)
-    
+
     console.log('Generated user wallet address:', userWalletAddress)
-    
+
     const response = await grail.post('/api/users', {
       kycHash: kycHash,
       userWalletAddress: userWalletAddress, // Unique user wallet address
@@ -349,13 +359,13 @@ async function createGrailUser(email, phone) {
         tags: ['retail', 'glink']
       }
     })
-    
+
     console.log('GRAIL user creation response:', response.data)
-    
+
     if (response.data?.success && response.data?.data) {
       const userData = response.data.data
       const serializedTx = userData.transaction?.serializedTx
-      
+
       // Sign and submit transaction if provided
       let signature = null
       if (serializedTx) {
@@ -363,11 +373,11 @@ async function createGrailUser(email, phone) {
           const signResult = await signAndSubmit(serializedTx)
           signature = signResult.signature
           console.log('✅ GRAIL user creation TX:', signature)
-        } catch(signError) {
+        } catch (signError) {
           console.log('User creation signing failed:', signError.message)
         }
       }
-      
+
       return {
         success: true,
         userId: userData.userId,
@@ -379,30 +389,30 @@ async function createGrailUser(email, phone) {
     } else {
       throw new Error('GRAIL user creation failed: ' + JSON.stringify(response.data))
     }
-  } catch(e) {
+  } catch (e) {
     console.log('GRAIL user creation error:', e.message)
     if (e.response) {
       console.log('User creation error details:', e.response.status, e.response.data)
-      
+
       // If user already exists, try with completely different data
       if (e.response.status === 400 && e.response.data?.error?.includes('already exists')) {
         console.log('User already exists, trying with different approach...')
-        
+
         // Try with a completely random wallet address
         try {
           const randomTimestamp = Date.now() + Math.random()
           const randomHash = crypto.createHash('sha256').update(randomTimestamp.toString()).digest()
           const randomKycHash = base58Encode(randomHash)
-          
+
           const randomWalletHash = crypto.createHash('sha256').update(randomTimestamp.toString() + 'wallet').digest()
           const randomWalletBytes = new Uint8Array(32)
           randomWalletBytes.set(randomWalletHash.slice(0, 32))
           const randomUserWalletAddress = base58Encode(randomWalletBytes)
-          
+
           console.log('Trying with completely random data...')
           console.log('Random KYC hash:', randomKycHash)
           console.log('Random wallet address:', randomUserWalletAddress)
-          
+
           const retryResponse = await grail.post('/api/users', {
             kycHash: randomKycHash,
             userWalletAddress: randomUserWalletAddress,
@@ -411,7 +421,7 @@ async function createGrailUser(email, phone) {
               tags: ['retail', 'glink']
             }
           })
-          
+
           if (retryResponse.data?.success && retryResponse.data?.data) {
             const userData = retryResponse.data.data
             console.log('✅ GRAIL user created with random data:', userData.userId)
@@ -424,13 +434,13 @@ async function createGrailUser(email, phone) {
               kycHash: userData.kycHash
             }
           }
-        } catch(retryError) {
+        } catch (retryError) {
           console.log('Random retry failed:', retryError.message)
           console.log('Retry error details:', retryError.response?.data)
         }
       }
     }
-    
+
     // If all attempts fail, return failure but don't create mock users
     console.log('All user creation attempts failed')
     return {
@@ -444,42 +454,76 @@ async function createGrailUser(email, phone) {
   }
 }
 
+let cachedGoldPrice = null;
+let lastGoldFetch = 0;
+const GOLD_CACHE_TTL = 60000; // 1 minute
+
 async function getGoldPrice() {
+  const now = Date.now();
+  if (cachedGoldPrice !== null && (now - lastGoldFetch < GOLD_CACHE_TTL)) {
+    return cachedGoldPrice;
+  }
+
   try {
-    const r = await grail.get('/api/trading/gold/price')
-    const usd = parseFloat(r.data.data.price)
-    return (usd * 84) / 31.1035
-  } catch(e) { return 7200 }
+    const r = await grail.get('/api/trading/gold/price');
+    const usd = parseFloat(r.data.data.price);
+    const inr = (usd * 84) / 31.1035;
+
+    cachedGoldPrice = inr;
+    lastGoldFetch = now;
+    return inr;
+  } catch (e) {
+    if (cachedGoldPrice !== null) return cachedGoldPrice;
+    return 7200;
+  }
 }
 
 app.get('/api/gold/price', async (req, res) => {
+  const now = Date.now();
+  if (cachedGoldPrice !== null && (now - lastGoldFetch < GOLD_CACHE_TTL)) {
+    return res.json({
+      success: true,
+      price_inr_per_gram: Math.round(cachedGoldPrice),
+      price_usd: (cachedGoldPrice * 31.1035) / 84,
+      source: 'Cache (Pyth Oracle via GRAIL)'
+    });
+  }
+
   try {
-    const r = await grail.get('/api/trading/gold/price')
-    const usd = parseFloat(r.data.data.price)
-    const inr = (usd * 84) / 31.1035
-    res.json({ success: true, price_inr_per_gram: Math.round(inr), price_usd: usd, source: 'Pyth Oracle via GRAIL' })
-  } catch(e) {
-    res.json({ success: true, price_inr_per_gram: 7200, source: 'fallback' })
+    const r = await grail.get('/api/trading/gold/price');
+    const usd = parseFloat(r.data.data.price);
+    const inr = (usd * 84) / 31.1035;
+
+    cachedGoldPrice = inr;
+    lastGoldFetch = now;
+
+    res.json({ success: true, price_inr_per_gram: Math.round(inr), price_usd: usd, source: 'Pyth Oracle via GRAIL' });
+  } catch (e) {
+    res.json({
+      success: true,
+      price_inr_per_gram: cachedGoldPrice !== null ? Math.round(cachedGoldPrice) : 7200,
+      source: 'fallback'
+    });
   }
 })
 
 app.post('/api/auth/send-otp', async (req, res) => {
   try {
     const { email } = req.body
-    
+
     if (!email) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email is required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required'
       })
     }
-    
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString()
-    otpStore[email] = { 
-      otp, 
-      expiry: Date.now() + 10 * 60 * 1000 
+    otpStore[email] = {
+      otp,
+      expiry: Date.now() + 10 * 60 * 1000
     }
-    
+
     await transporter.sendMail({
       from: '"G-Link Gold" <' + process.env.EMAIL_USER + '>',
       to: email,
@@ -494,15 +538,15 @@ app.post('/api/auth/send-otp', async (req, res) => {
         </div>
       `
     })
-    
+
     console.log('OTP sent to:', email)
     res.json({ success: true })
-    
-  } catch(e) {
+
+  } catch (e) {
     console.log('OTP send failed:', e.message)
-    res.status(500).json({ 
-      success: false, 
-      error: 'Failed to send OTP: ' + e.message 
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send OTP: ' + e.message
     })
   }
 })
@@ -516,7 +560,7 @@ app.post('/api/auth/verify-otp', async (req, res) => {
     if (stored.otp !== otp) return res.status(400).json({ success: false, error: 'Wrong OTP' })
     delete otpStore[email]
     res.json({ success: true })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -534,7 +578,7 @@ app.post('/api/auth/signup', async (req, res) => {
       .select()
     if (error) throw error
     res.json({ success: true, user: { id: data[0].id, name, email, phone, gold_grams: 0, grail_user_id: grailUser.userId } })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -556,7 +600,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
     console.log('Login success for:', email)
     res.json({ success: true, user: { id: data.id, name: data.name, email: data.email, phone: data.phone, gold_grams: data.gold_grams, grail_user_id: data.grail_user_id } })
-  } catch(e) {
+  } catch (e) {
     console.error('Login error for:', email, 'error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -566,13 +610,13 @@ app.post('/api/auth/wallet-login', async (req, res) => {
   try {
     const { walletAddress } = req.body
     if (!walletAddress) throw new Error('Wallet required')
-    
+
     let { data: user } = await supabase
       .from('users')
       .select('*')
       .eq('wallet_address', walletAddress)
       .single()
-    
+
     if (!user) {
       const grailUser = await createGrailUser(
         walletAddress + '@wallet.glink.com',
@@ -581,7 +625,7 @@ app.post('/api/auth/wallet-login', async (req, res) => {
       const { data: newUser, error } = await supabase
         .from('users')
         .insert([{
-          name: 'User ' + walletAddress.slice(0,6),
+          name: 'User ' + walletAddress.slice(0, 6),
           email: walletAddress + '@wallet.glink.com',
           wallet_address: walletAddress,
           gold_grams: 0,
@@ -593,7 +637,7 @@ app.post('/api/auth/wallet-login', async (req, res) => {
       if (error) throw error
       user = newUser
     }
-    
+
     res.json({
       success: true,
       user: {
@@ -605,7 +649,7 @@ app.post('/api/auth/wallet-login', async (req, res) => {
         grail_user_id: user.grail_user_id
       }
     })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -614,24 +658,24 @@ app.post('/api/auth/wallet-login', async (req, res) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: 'https://glink-n0y9.onrender.com/auth/google/callback'
+  callbackURL: GOOGLE_REDIRECT_URI
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails[0].value
     const name = profile.displayName
-    
+
     console.log('Google login:', email, name)
-    
+
     let { data: user } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
       .single()
-    
+
     if (!user) {
       console.log('New Google user, creating GRAIL account...')
       const grailUser = await createGrailUser(email, '0000000000')
-      
+
       const { data: newUser, error } = await supabase
         .from('users')
         .insert([{
@@ -646,14 +690,14 @@ passport.use(new GoogleStrategy({
         }])
         .select()
         .single()
-      
+
       if (error) throw error
       user = newUser
       console.log('New Google user created:', email)
     }
-    
+
     return done(null, user)
-  } catch(e) {
+  } catch (e) {
     console.log('Google auth error:', e.message)
     return done(e, null)
   }
@@ -671,21 +715,21 @@ passport.deserializeUser(async (id, done) => {
       .eq('id', id)
       .single()
     done(null, user)
-  } catch(e) {
+  } catch (e) {
     done(e, null)
   }
 })
 
 // Google OAuth Routes
 app.get('/auth/google',
-  passport.authenticate('google', { 
-    scope: ['profile', 'email'] 
+  passport.authenticate('google', {
+    scope: ['profile', 'email']
   })
 )
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', { 
-    failureRedirect: '/login.html?error=google_failed' 
+  passport.authenticate('google', {
+    failureRedirect: '/login.html?error=google_failed'
   }),
   (req, res) => {
     const user = req.user
@@ -696,7 +740,7 @@ app.get('/auth/google/callback',
       gold_grams: user.gold_grams,
       grail_user_id: user.grail_user_id
     })
-    
+
     res.send(`
       <html>
         <body>
@@ -714,30 +758,30 @@ app.get('/api/dashboard', async (req, res) => {
   try {
     const email = req.query.email
     if (!email) throw new Error('Email required')
-    
+
     const { data: user } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
       .single()
-    
+
     if (!user) throw new Error('User not found')
-    
+
     const { data: links } = await supabase
       .from('gold_links')
       .select('*')
       .eq('sender_email', email)
-    
+
     const { data: txns } = await supabase
       .from('transactions')
       .select('*')
       .eq('user_email', email)
       .order('created_at', { ascending: false })
       .limit(10)
-    
+
     const inrPerGram = await getGoldPrice()
     const goldGrams = parseFloat(user.gold_grams || 0)
-    
+
     res.json({
       success: true,
       name: user.name,
@@ -750,7 +794,7 @@ app.get('/api/dashboard', async (req, res) => {
       grailUserId: user.grail_user_id,
       walletAddress: user.wallet_address
     })
-  } catch(e) {
+  } catch (e) {
     console.log('Dashboard error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -760,22 +804,22 @@ app.post('/api/links/create', async (req, res) => {
   try {
     console.log('Creating link with data:', req.body)
     const { amount_inr, senderName, senderEmail, message, paymentId, recipient_phone, recipient_glink_id } = req.body
-    
+
     console.log('Extracted fields:', { amount_inr, senderName, senderEmail, recipient_glink_id, recipient_phone })
-    
+
     if (!amount_inr || !senderName || !senderEmail) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Missing required fields' 
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields'
       })
     }
-    
+
     const goldPrice = await getGoldPrice()
     const usdcAmount = parseFloat(amount_inr) / 84
     const goldGrams = (parseFloat(amount_inr) / goldPrice).toFixed(4)
-    
+
     console.log('Gold calculation:', { goldPrice, usdcAmount, goldGrams })
-    
+
     // Create or get GRAIL user for sender
     let grailUserId = null
     let userPda = null
@@ -785,11 +829,11 @@ app.post('/api/links/create', async (req, res) => {
         .select('grail_user_id')
         .eq('email', senderEmail)
         .single()
-      
+
       if (existingUser?.grail_user_id) {
         const existingId = existingUser.grail_user_id
         console.log('Found existing GRAIL ID:', existingId)
-        
+
         // ALWAYS create fresh GRAIL user for gold purchases - old IDs are incompatible with new KYC format
         console.log('Ignoring old GRAIL ID - creating fresh user with new KYC format...')
         const result = await createGrailUser(senderEmail, recipient_phone || '')
@@ -797,10 +841,10 @@ app.post('/api/links/create', async (req, res) => {
         console.log('New grailUserId after creation:', grailUserId)
         userPda = result.userPda
         console.log('New userPda after creation:', userPda)
-        
+
         // Update database with fresh KYC-based IDs
         await supabase.from('users')
-          .update({ 
+          .update({
             grail_user_id: grailUserId,
             wallet_address: result.walletAddress
           })
@@ -814,23 +858,23 @@ app.post('/api/links/create', async (req, res) => {
         userPda = result.userPda
         // Save both to database
         await supabase.from('users')
-          .update({ 
+          .update({
             grail_user_id: grailUserId,
             wallet_address: result.walletAddress
           })
           .eq('email', senderEmail)
         console.log('Saved real GRAIL ID and PDA:', grailUserId, userPda)
       }
-    } catch(e) {
+    } catch (e) {
       console.log('GRAIL user error:', e.message)
       grailUserId = 'local_' + Date.now()
       userPda = grailUserId
     }
-    
+
     // Wait for GRAIL to index the fresh KYC-based user
     console.log('Waiting 8 seconds for fresh KYC user indexing...')
     await new Promise(resolve => setTimeout(resolve, 8000))
-    
+
     // Buy gold on GRAIL using userPda (not grailUserId)
     let solanaExplorer = null
     let grailTxId = null
@@ -849,14 +893,14 @@ app.post('/api/links/create', async (req, res) => {
         console.log('No real GRAIL user available - skipping gold purchase')
         console.log('User PDA type:', userPda ? userPda.substring(0, 20) + '...' : 'null')
       }
-    } catch(e) {
+    } catch (e) {
       console.log('Gold purchase error:', e.message)
     }
-    
+
     // Generate unique link ID
     const linkId = nanoid(10)
     const slug = 'gold_' + linkId
-    
+
     const { data: link, error } = await supabase.from('gold_links').insert([{
       link_id: linkId,
       slug: slug,
@@ -871,14 +915,14 @@ app.post('/api/links/create', async (req, res) => {
       grail_user_id: grailUserId,
       payment_id: paymentId
     }]).select().single()
-    
+
     if (error) {
       console.log('Supabase error:', error)
       throw new Error(error.message)
     }
-    
+
     console.log('Link created successfully:', linkId)
-    
+
     // Send email notification to recipient if email provided
     console.log('About to send email, recipient_glink_id:', recipient_glink_id)
     if (recipient_glink_id) {
@@ -905,13 +949,13 @@ app.post('/api/links/create', async (req, res) => {
           html: emailHtml
         })
         console.log('Gold link email sent to recipient:', recipient_glink_id)
-      } catch(e) {
+      } catch (e) {
         console.log('Email error:', e.message)
       }
     } else {
       console.log('No recipient email provided, skipping email notification')
     }
-    
+
     res.json({
       success: true,
       link: link,
@@ -921,12 +965,12 @@ app.post('/api/links/create', async (req, res) => {
       solanaExplorer: solanaExplorer,
       paymentId: paymentId
     })
-    
-  } catch(e) {
+
+  } catch (e) {
     console.log('Create link error:', e.message)
-    res.status(500).json({ 
-      success: false, 
-      error: e.message 
+    res.status(500).json({
+      success: false,
+      error: e.message
     })
   }
 })
@@ -942,7 +986,7 @@ app.get('/api/links/:slug', async (req, res) => {
     }
     console.log('Link found successfully:', data.link_id)
     res.json({ success: true, link: data })
-  } catch(e) {
+  } catch (e) {
     console.log('Get link error:', e.message)
     res.status(404).json({ success: false, error: e.message })
   }
@@ -952,74 +996,74 @@ app.post('/api/links/:slug/claim', async (req, res) => {
   try {
     const { name, email, phone } = req.body
     console.log('Claim attempt:', { name, email, phone, slug: req.params.slug })
-    
+
     const { data: link } = await supabase.from('gold_links').select('*').eq('link_id', req.params.slug).single()
     if (!link) throw new Error('Link not found')
-    
+
     // Check if already claimed - do this FIRST before any other operations
     if (link.status === 'claimed') {
       console.log('Link already claimed, rejecting claim attempt')
       return res.status(400).json({ success: false, error: 'This gold link has already been claimed' })
     }
-    
+
     console.log('Link found:', { linkId: link.link_id, goldGrams: link.gold_grams, status: link.status })
-    
+
     // Check if user already exists BEFORE creating GRAIL user
     const { data: existingUser } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
       .single()
-    
+
     console.log('Existing user check:', existingUser ? `Found: ${existingUser.email}, gold: ${existingUser.gold_grams}` : 'Not found')
-    
+
     const grailUser = await createGrailUser(email, phone)
     console.log('GRAIL user created:', { userId: grailUser.userId, success: grailUser.success })
-    
+
     // Double-check status again before updating (race condition protection)
     const { data: recheckLink } = await supabase.from('gold_links').select('status').eq('link_id', req.params.slug).single()
     if (recheckLink?.status === 'claimed') {
       console.log('Race condition detected - link claimed during processing')
       return res.status(400).json({ success: false, error: 'This gold link was just claimed by someone else' })
     }
-    
+
     // Update link status IMMEDIATELY to prevent race conditions
-    const { error: statusError } = await supabase.from('gold_links').update({ 
-      status: 'claimed', 
-      claimer_name: name, 
-      claimer_email: email, 
-      claimer_phone: phone, 
-      claimed_at: new Date().toISOString() 
+    const { error: statusError } = await supabase.from('gold_links').update({
+      status: 'claimed',
+      claimer_name: name,
+      claimer_email: email,
+      claimer_phone: phone,
+      claimed_at: new Date().toISOString()
     }).eq('link_id', req.params.slug)
-    
+
     if (statusError) {
       console.log('Status update error:', statusError)
       throw new Error('Failed to claim link: ' + statusError.message)
     }
-    
+
     console.log('✅ Link status updated to claimed')
-    
+
     if (existingUser) {
       const newGold = parseFloat(existingUser.gold_grams || 0) + parseFloat(link.gold_grams)
-      console.log('Updating existing user gold:', { 
-        currentGold: existingUser.gold_grams, 
-        linkGold: link.gold_grams, 
-        newGold: newGold 
+      console.log('Updating existing user gold:', {
+        currentGold: existingUser.gold_grams,
+        linkGold: link.gold_grams,
+        newGold: newGold
       })
-      
+
       const { error: updateError } = await supabase.from('users')
-        .update({ 
+        .update({
           gold_grams: newGold,
           grail_user_id: grailUser.userId,
           name: name || existingUser.name
         })
         .eq('email', email)
-      
+
       if (updateError) {
         console.log('Update error:', updateError)
         throw new Error('Failed to update gold balance: ' + updateError.message)
       }
-      
+
       console.log('✅ Gold added to vault:', newGold)
     } else {
       console.log('Creating new user with gold:', link.gold_grams)
@@ -1033,34 +1077,34 @@ app.post('/api/links/:slug/claim', async (req, res) => {
           password: await bcrypt.hash(email, 10),
           created_at: new Date().toISOString()
         }])
-      
+
       if (insertError) {
         console.log('Insert error:', insertError)
         throw new Error('Failed to create user: ' + insertError.message)
       }
-      
+
       console.log('✅ New user created with gold:', link.gold_grams)
     }
-    
+
     // Record transaction
     await supabase.from('transactions').insert([{
-      user_email: email, 
-      type: 'gold_claimed', 
-      amount_inr: link.amount_inr, 
-      gold_grams: link.gold_grams, 
-      grail_tx_id: grailUser.userId, 
+      user_email: email,
+      type: 'gold_claimed',
+      amount_inr: link.amount_inr,
+      gold_grams: link.gold_grams,
+      grail_tx_id: grailUser.userId,
       status: 'completed'
     }])
-    
-    res.json({ 
-      success: true, 
-      goldGrams: link.gold_grams, 
-      grailUserId: grailUser.userId, 
-      message: link.gold_grams + 'g gold added!', 
-      solanaExplorer: 'https://solscan.io/account/' + grailUser.userId + '', 
-      poweredBy: 'Oro GRAIL | Solana' 
+
+    res.json({
+      success: true,
+      goldGrams: link.gold_grams,
+      grailUserId: grailUser.userId,
+      message: link.gold_grams + 'g gold added!',
+      solanaExplorer: 'https://solscan.io/account/' + grailUser.userId + '',
+      poweredBy: 'Oro GRAIL | Solana'
     })
-  } catch(e) {
+  } catch (e) {
     console.log('Claim error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1072,7 +1116,7 @@ app.post('/api/registry/create', async (req, res) => {
     const slug = nanoid(8)
     await supabase.from('registries').insert([{ slug, couple_name: coupleName, wedding_date: weddingDate, owner_email: ownerEmail, story, total_gold: 0 }])
     res.json({ success: true, slug, link: req.protocol + '://' + req.get('host') + '/wedding-registry.html?slug=' + slug })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1086,7 +1130,7 @@ app.get('/api/registry/:slug', async (req, res) => {
     }
     const { data: gifts } = await supabase.from('registry_gifts').select('*').eq('registry_slug', req.params.slug).order('created_at', { ascending: false })
     res.json({ success: true, registry, gifts: gifts || [] })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1104,12 +1148,12 @@ app.post('/api/registry/:slug/bless', async (req, res) => {
       const { data: newReg } = await supabase.from('registries').insert([{ slug: req.params.slug, couple_name: 'Priya & Rahul', wedding_date: '2025-12-01', total_gold: 0 }]).select().single()
       registry = newReg
     }
-    await supabase.from('registry_gifts').insert([{ 
-      registry_slug: req.params.slug, 
-      giver_name: name, 
-      amount_inr, 
-      gold_grams: goldGrams, 
-      message, 
+    await supabase.from('registry_gifts').insert([{
+      registry_slug: req.params.slug,
+      giver_name: name,
+      amount_inr,
+      gold_grams: goldGrams,
+      message,
       grail_tx_id: grailUser.userId,
       receiver_name: receiverName || null,
       receiver_phone: receiverPhone || null
@@ -1117,20 +1161,20 @@ app.post('/api/registry/:slug/bless', async (req, res) => {
     const newTotal = parseFloat(((registry.total_gold || 0) + goldGrams).toFixed(4))
     await supabase.from('registries').update({ total_gold: newTotal }).eq('slug', req.params.slug)
     await supabase.from('transactions').insert([{ user_email: email || name, type: 'blessing', amount_inr, gold_grams: goldGrams, grail_tx_id: grailUser.userId, status: 'completed' }])
-    
+
     // Send SMS to receiver if phone provided
     if (receiverPhone) {
       try {
         const smsMessage = `You received ${goldGrams}g gold blessing from ${name}! Message: "${message || 'Wishing you happiness!'}" - G-Link`
         await sendSMS(receiverPhone, smsMessage)
         console.log('Blessing SMS sent to receiver:', receiverPhone)
-      } catch(e) {
+      } catch (e) {
         console.log('SMS error:', e.message)
       }
     }
-    
+
     res.json({ success: true, goldGrams, totalGold: newTotal, grailUserId: grailUser.userId, grailConnected: grailUser.success, solanaExplorer: 'https://solscan.io/account/' + grailUser.userId + '', poweredBy: 'Oro GRAIL | Solana' })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1141,17 +1185,17 @@ async function buyGoldOnGRAIL(userId, usdcAmount) {
     console.log('Buying gold - userId:', userId, 'usdc:', usdcAmount)
     console.log('User ID type:', typeof userId)
     console.log('User ID length:', userId.length)
-    
+
     const priceRes = await grail.get('/api/trading/gold/price')
     const pricePerTroyOunceUSD = parseFloat(priceRes.data?.data?.price || 5109)
-    
+
     // goldAmount must be in TROY OUNCES not grams!
     const goldAmountTroyOunces = parseFloat(usdcAmount) / pricePerTroyOunceUSD
     const maxUsdcAmount = parseFloat(usdcAmount) * 1.05
-    
+
     console.log('Gold in troy ounces:', goldAmountTroyOunces.toFixed(6))
     console.log('Max USDC:', maxUsdcAmount.toFixed(2))
-    
+
     // Use the correct GRAIL endpoint: /api/trading/purchases/user (plural, not singular)
     let res
     try {
@@ -1163,17 +1207,17 @@ async function buyGoldOnGRAIL(userId, usdcAmount) {
         // Remove userId, co_sign, and userAsFeePayer as API rejects them
       }
       console.log('Request body:', JSON.stringify(requestBody))
-      
+
       res = await grail.post('/api/trading/purchases/user', requestBody)
       console.log('✅ Purchase endpoint success!')
       console.log('Response status:', res.status)
       console.log('Response data:', JSON.stringify(res.data))
-    } catch(endpointError) {
+    } catch (endpointError) {
       console.log('=== PURCHASE FAILED ===')
       console.log('Purchase endpoint failed, error:', endpointError.message)
       console.log('Response status:', endpointError.response?.status)
       console.log('Response data:', JSON.stringify(endpointError.response?.data))
-      
+
       // Try with different field names
       try {
         console.log('=== TRYING ALTERNATIVE FIELD NAMES ===')
@@ -1182,15 +1226,15 @@ async function buyGoldOnGRAIL(userId, usdcAmount) {
           max_usdc_amount: parseFloat(maxUsdcAmount.toFixed(2))
         }
         console.log('Alternative request body:', JSON.stringify(altRequestBody))
-        
+
         res = await grail.post('/api/trading/purchases/user', altRequestBody)
         console.log('✅ Alternative format success!')
         console.log('Response data:', JSON.stringify(res.data))
-      } catch(altError) {
+      } catch (altError) {
         console.log('=== ALTERNATIVE FAILED ===')
         console.log('Alternative format failed, trying partner endpoint...')
         console.log('Alt error:', altError.message)
-        
+
         // Try partner purchase endpoint as fallback
         try {
           console.log('=== TRYING PARTNER ENDPOINT ===')
@@ -1199,11 +1243,11 @@ async function buyGoldOnGRAIL(userId, usdcAmount) {
             maxUsdcAmount: parseFloat(maxUsdcAmount.toFixed(2))
           }
           console.log('Partner request body:', JSON.stringify(partnerRequestBody))
-          
+
           res = await grail.post('/api/trading/purchases/partner', partnerRequestBody)
           console.log('✅ Partner purchase endpoint success!')
           console.log('Partner response:', JSON.stringify(res.data))
-        } catch(partnerError) {
+        } catch (partnerError) {
           console.log('=== PARTNER FAILED TOO ===')
           console.log('Partner purchase failed, error:', partnerError.message)
           console.log('Partner error details:', JSON.stringify(partnerError.response?.data))
@@ -1211,18 +1255,18 @@ async function buyGoldOnGRAIL(userId, usdcAmount) {
         }
       }
     }
-    
+
     console.log('=== PROCESSING RESPONSE ===')
     console.log('GRAIL buy response:', JSON.stringify(res.data))
-    
+
     const serializedTx = res.data?.data?.transaction?.serializedTx
     const purchaseId = res.data?.data?.purchaseId
     const walletType = res.data?.data?.transaction?.signingInstructions?.walletType
-    
+
     console.log('walletType:', walletType)
     console.log('purchaseId:', purchaseId)
     console.log('serializedTx present:', !!serializedTx)
-    
+
     if (serializedTx) {
       console.log('=== SIGNING TRANSACTION ===')
       const signResult = await signAndSubmit(serializedTx)
@@ -1234,59 +1278,59 @@ async function buyGoldOnGRAIL(userId, usdcAmount) {
         realTransaction: true
       }
     }
-    
+
     console.log('=== NO TRANSACTION TO SIGN ===')
     return {
       success: true,
       transactionId: purchaseId || 'tx_' + Date.now(),
       realTransaction: true
     }
-    
-  } catch(e) {
+
+  } catch (e) {
     console.log('=== BUY GOLD ERROR ===')
     console.log('buyGoldOnGRAIL error:', e.message)
     if (e.response) {
       console.log('Error status:', e.response.status)
       console.log('Error data:', JSON.stringify(e.response.data))
       console.log('Error headers:', JSON.stringify(e.response.headers))
-      
+
       // Check for rate limiting
       if (e.response.status === 429 || e.response.data?.error?.includes('rate')) {
         console.log('⚠️ GRAIL rate limit hit - using mock transaction')
-        return { 
-          success: false, 
-          transactionId: 'mock_rate_limit_' + Date.now(), 
+        return {
+          success: false,
+          transactionId: 'mock_rate_limit_' + Date.now(),
           mock: true,
           reason: 'rate_limit'
         }
       }
-      
+
       // Check for user not found specifically
       if (e.response.status === 400 && e.response.data?.error?.includes('User not found')) {
         console.log('❌ GRAIL user not recognized - may need fresh user creation')
-        return { 
-          success: false, 
-          transactionId: 'mock_user_not_recognized_' + Date.now(), 
+        return {
+          success: false,
+          transactionId: 'mock_user_not_recognized_' + Date.now(),
           mock: true,
           reason: 'user_not_recognized'
         }
       }
-      
+
       // Check for bad request
       if (e.response.status === 400) {
         console.log('❌ GRAIL bad request - check parameters')
-        return { 
-          success: false, 
-          transactionId: 'mock_bad_request_' + Date.now(), 
+        return {
+          success: false,
+          transactionId: 'mock_bad_request_' + Date.now(),
           mock: true,
           reason: 'bad_request'
         }
       }
     }
     console.log('=== UNKNOWN ERROR - FALLBACK ===')
-    return { 
-      success: false, 
-      transactionId: 'mock_error_' + Date.now(), 
+    return {
+      success: false,
+      transactionId: 'mock_error_' + Date.now(),
       mock: true,
       reason: 'unknown_error'
     }
@@ -1298,7 +1342,7 @@ app.post('/api/groups/create', async (req, res) => {
   try {
     const { name, type, description, rules, creatorEmail } = req.body
     const groupId = nanoid(10)
-    
+
     const { data: group, error } = await supabase.from('groups').insert([{
       group_id: groupId,
       name,
@@ -1310,9 +1354,9 @@ app.post('/api/groups/create', async (req, res) => {
       member_count: 1,
       created_at: new Date().toISOString()
     }]).select().single()
-    
+
     if (error) throw new Error(error.message)
-    
+
     // Add creator as first member
     await supabase.from('group_members').insert([{
       group_id: groupId,
@@ -1320,9 +1364,9 @@ app.post('/api/groups/create', async (req, res) => {
       role: 'admin',
       joined_at: new Date().toISOString()
     }])
-    
+
     res.json({ success: true, group })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1333,10 +1377,10 @@ app.get('/api/groups', async (req, res) => {
       .from('groups')
       .select('*')
       .order('created_at', { ascending: false })
-    
+
     if (error) throw new Error(error.message)
     res.json({ success: true, groups })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1348,24 +1392,24 @@ app.get('/api/groups/:groupId', async (req, res) => {
       .select('*')
       .eq('group_id', req.params.groupId)
       .single()
-    
+
     if (error) throw new Error(error.message)
-    
+
     // Get group members
     const { data: members } = await supabase
       .from('group_members')
       .select('*')
       .eq('group_id', req.params.groupId)
-    
+
     // Get group contributions
     const { data: contributions } = await supabase
       .from('group_contributions')
       .select('*')
       .eq('group_id', req.params.groupId)
       .order('created_at', { ascending: false })
-    
+
     res.json({ success: true, group, members, contributions })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1374,7 +1418,7 @@ app.post('/api/groups/:groupId/contribute', async (req, res) => {
   try {
     const { email, amount, message, paymentId } = req.body
     const goldGrams = parseFloat((amount / await getGoldPrice()).toFixed(4))
-    
+
     // Add contribution
     const { data: contribution, error } = await supabase.from('group_contributions').insert([{
       group_id: req.params.groupId,
@@ -1385,17 +1429,17 @@ app.post('/api/groups/:groupId/contribute', async (req, res) => {
       payment_id: paymentId,
       created_at: new Date().toISOString()
     }]).select().single()
-    
+
     if (error) throw new Error(error.message)
-    
+
     // Update group total gold
-    await supabase.rpc('increment_group_gold', { 
-      group_id: req.params.groupId, 
-      gold_amount: goldGrams 
+    await supabase.rpc('increment_group_gold', {
+      group_id: req.params.groupId,
+      gold_amount: goldGrams
     })
-    
+
     res.json({ success: true, contribution })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1403,7 +1447,7 @@ app.post('/api/groups/:groupId/contribute', async (req, res) => {
 app.post('/api/groups/:groupId/join', async (req, res) => {
   try {
     const { email } = req.body
-    
+
     // Check if already a member
     const { data: existing } = await supabase
       .from('group_members')
@@ -1411,11 +1455,11 @@ app.post('/api/groups/:groupId/join', async (req, res) => {
       .eq('group_id', req.params.groupId)
       .eq('email', email)
       .single()
-    
+
     if (existing) {
       return res.status(400).json({ success: false, error: 'Already a member' })
     }
-    
+
     // Add member
     const { data: member, error } = await supabase.from('group_members').insert([{
       group_id: req.params.groupId,
@@ -1423,16 +1467,16 @@ app.post('/api/groups/:groupId/join', async (req, res) => {
       role: 'member',
       joined_at: new Date().toISOString()
     }]).select().single()
-    
+
     if (error) throw new Error(error.message)
-    
+
     // Update member count
-    await supabase.rpc('increment_group_members', { 
-      group_id: req.params.groupId 
+    await supabase.rpc('increment_group_members', {
+      group_id: req.params.groupId
     })
-    
+
     res.json({ success: true, member })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1441,30 +1485,30 @@ app.post('/api/groups/:groupId/join', async (req, res) => {
 app.post('/api/wallet/buy-gold', async (req, res) => {
   try {
     const { email, goldGrams, amount } = req.body
-    
+
     // Get user
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
       .single()
-    
+
     if (error || !user) {
       return res.status(404).json({ success: false, error: 'User not found' })
     }
-    
+
     // Create GRAIL user and transaction
     const grailUser = await createGrailUser(email, user.phone || '0000000000')
-    
+
     // Update user's gold balance
     await supabase
       .from('users')
-      .update({ 
+      .update({
         gold_grams: (user.gold_grams || 0) + parseFloat(goldGrams),
         grail_user_id: grailUser.userId
       })
       .eq('email', email)
-    
+
     // Add transaction record
     await supabase.from('transactions').insert([{
       user_email: email,
@@ -1474,14 +1518,14 @@ app.post('/api/wallet/buy-gold', async (req, res) => {
       grail_tx_id: grailUser.userId,
       status: 'completed'
     }])
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       goldGrams: parseFloat(goldGrams),
-      grailUserId: grailUser.userId 
+      grailUserId: grailUser.userId
     })
-    
-  } catch(e) {
+
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1494,10 +1538,10 @@ app.get('/api/groups/:groupId/messages', async (req, res) => {
       .select('*')
       .eq('group_id', req.params.groupId)
       .order('created_at', { ascending: true })
-    
+
     if (error) throw new Error(error.message)
     res.json({ success: true, messages })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1505,7 +1549,7 @@ app.get('/api/groups/:groupId/messages', async (req, res) => {
 app.post('/api/groups/:groupId/messages', async (req, res) => {
   try {
     const { senderEmail, message, messageType } = req.body
-    
+
     const { data: newMessage, error } = await supabase.from('group_messages').insert([{
       group_id: req.params.groupId,
       sender_email: senderEmail,
@@ -1513,9 +1557,9 @@ app.post('/api/groups/:groupId/messages', async (req, res) => {
       message_type: messageType || 'text',
       created_at: new Date().toISOString()
     }]).select().single()
-    
+
     if (error) throw new Error(error.message)
-    
+
     // Send SMS notifications to group members (if enabled)
     if (messageType === 'gold_share') {
       const { data: members } = await supabase
@@ -1523,30 +1567,30 @@ app.post('/api/groups/:groupId/messages', async (req, res) => {
         .select('email')
         .eq('group_id', req.params.groupId)
         .neq('email', senderEmail)
-      
+
       // Get user details for SMS
       const { data: userData } = await supabase
         .from('users')
         .select('name, phone')
         .eq('email', senderEmail)
         .single()
-      
+
       for (const member of members) {
         const { data: memberData } = await supabase
           .from('users')
           .select('phone')
           .eq('email', member.email)
           .single()
-        
+
         if (memberData?.phone) {
           const smsMessage = `${userData?.name || 'Someone'} shared gold in your group! "${message}" - G-Link`
           await sendSMS(memberData.phone, smsMessage)
         }
       }
     }
-    
+
     res.json({ success: true, message: newMessage })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1555,7 +1599,7 @@ app.post('/api/groups/:groupId/share-gold', async (req, res) => {
   try {
     const { senderEmail, amount, message } = req.body
     const goldGrams = parseFloat((amount / await getGoldPrice()).toFixed(4))
-    
+
     // Add contribution
     const { data: contribution, error } = await supabase.from('group_contributions').insert([{
       group_id: req.params.groupId,
@@ -1566,22 +1610,22 @@ app.post('/api/groups/:groupId/share-gold', async (req, res) => {
       payment_id: 'group_share_' + Date.now(),
       created_at: new Date().toISOString()
     }]).select().single()
-    
+
     if (error) throw new Error(error.message)
-    
+
     // Update group total gold
-    await supabase.rpc('increment_group_gold', { 
-      group_id: req.params.groupId, 
-      gold_amount: goldGrams 
+    await supabase.rpc('increment_group_gold', {
+      group_id: req.params.groupId,
+      gold_amount: goldGrams
     })
-    
+
     // Add system message
     const { data: userData } = await supabase
       .from('users')
       .select('name')
       .eq('email', senderEmail)
       .single()
-    
+
     await supabase.from('group_messages').insert([{
       group_id: req.params.groupId,
       sender_email: 'system',
@@ -1589,9 +1633,9 @@ app.post('/api/groups/:groupId/share-gold', async (req, res) => {
       message_type: 'system',
       created_at: new Date().toISOString()
     }])
-    
+
     res.json({ success: true, contribution })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1602,13 +1646,13 @@ app.post('/api/withdraw', async (req, res) => {
     const { data: user } = await supabase.from('users').select('*').eq('email', email).single()
     if (!user) throw new Error('User not found')
     if ((user.gold_grams || 0) < goldGrams) throw new Error('Insufficient balance')
-    
+
     const inrPerGram = await getGoldPrice()
     const estimatedINR = Math.round(goldGrams * inrPerGram)
-    
+
     // For demo purposes, just deduct gold without real payout
     // Uncomment below for real Razorpay payouts (requires business account)
-    
+
     /*
     // Step 1: Create or get fund account
     let fundAccountId = user.fund_account_id
@@ -1648,10 +1692,10 @@ app.post('/api/withdraw', async (req, res) => {
     
     console.log('Payout created:', payout.id)
     */
-    
+
     // Deduct gold from user balance
     await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
-    
+
     // Record transaction
     const { data: txn } = await supabase.from('transactions').insert([{
       user_email: email,
@@ -1661,15 +1705,15 @@ app.post('/api/withdraw', async (req, res) => {
       status: 'completed', // Change to 'processing' for real payouts
       // razorpay_payout_id: payout.id // Uncomment for real payouts
     }]).select().single()
-    
-    res.json({ 
-      success: true, 
-      withdrawalId: 'WD_' + txn.id, 
-      estimatedINR, 
-      goldGrams, 
-      message: 'Withdrawal simulated! Gold deducted from vault. Real payouts require business account.' 
+
+    res.json({
+      success: true,
+      withdrawalId: 'WD_' + txn.id,
+      estimatedINR,
+      goldGrams,
+      message: 'Withdrawal simulated! Gold deducted from vault. Real payouts require business account.'
     })
-  } catch(e) {
+  } catch (e) {
     console.log('Withdraw error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1691,7 +1735,7 @@ app.get('/api/links/sender-history', async (req, res) => {
     if (error) throw error
 
     res.json({ success: true, links: links || [] })
-  } catch(e) {
+  } catch (e) {
     console.log('Sender history error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1713,7 +1757,7 @@ app.get('/api/links/recipient-history', async (req, res) => {
     if (error) throw error
 
     res.json({ success: true, links: links || [] })
-  } catch(e) {
+  } catch (e) {
     console.log('Recipient history error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1758,7 +1802,7 @@ app.post('/api/blessings/create-registry', async (req, res) => {
       registry: registry,
       registryUrl: `${req.protocol}://${req.get('host')}/blessings/${slug}`
     })
-  } catch(e) {
+  } catch (e) {
     console.log('Create blessing registry error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1791,7 +1835,7 @@ app.get('/api/blessings/:slug', async (req, res) => {
       registry: registry,
       blessings: blessings || []
     })
-  } catch(e) {
+  } catch (e) {
     console.log('Get blessing registry error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1835,7 +1879,7 @@ app.post('/api/blessings/:slug/send', async (req, res) => {
       success: true,
       blessing: blessing
     })
-  } catch(e) {
+  } catch (e) {
     console.log('Send blessing error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1854,7 +1898,7 @@ app.get('/api/blessings/user/:email', async (req, res) => {
     if (error) throw error
 
     res.json({ success: true, registries: registries || [] })
-  } catch(e) {
+  } catch (e) {
     console.log('Get user blessing registries error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1870,7 +1914,7 @@ app.post('/api/blessing/create', async (req, res) => {
     }
 
     const id = nanoid(10)
-    const baseUrl = 'https://glink-n0y9.onrender.com'
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
     const link = baseUrl + '/blessing.html?id=' + id
 
     const { error } = await supabase.from('gold_blessings').insert([{
@@ -1887,7 +1931,7 @@ app.post('/api/blessing/create', async (req, res) => {
     if (error) throw error
 
     res.json({ success: true, id, link })
-  } catch(e) {
+  } catch (e) {
     console.log('Create blessing error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1926,7 +1970,7 @@ app.get('/api/blessing/my', async (req, res) => {
     )
 
     res.json({ success: true, blessings: blessingsWithCounts })
-  } catch(e) {
+  } catch (e) {
     console.log('Get my blessings error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -1960,7 +2004,7 @@ app.get('/api/blessing/:id', async (req, res) => {
       entries: entries || [],
       livePrice: Math.round(inrPerGram)
     })
-  } catch(e) {
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message })
   }
 })
@@ -1996,7 +2040,7 @@ app.post('/api/blessing/:id/send', async (req, res) => {
 
     try {
       const blesserEmailForGrail = blesserEmail ||
-        blesserName.toLowerCase().replace(/\s/g,'') + '@blessing.glink'
+        blesserName.toLowerCase().replace(/\s/g, '') + '@blessing.glink'
 
       console.log('Creating GRAIL user for blesser...')
       const grailUser = await createGrailUser(blesserEmailForGrail, '0000000000')
@@ -2017,7 +2061,7 @@ app.post('/api/blessing/:id/send', async (req, res) => {
         grailTxId = goldResult.transactionId
         console.log('Blessing gold TX:', grailTxId)
       }
-    } catch(e) {
+    } catch (e) {
       console.log('GRAIL blessing error:', e.message)
     }
 
@@ -2078,7 +2122,7 @@ app.post('/api/blessing/:id/send', async (req, res) => {
                 </p>
               </div>
               ${blesserMessage ?
-                `<p style="color:#aaa;font-style:italic">
+              `<p style="color:#aaa;font-style:italic">
                   "${blesserMessage}"
                 </p>` : ''}
               <div style="background:#111;border-radius:8px;
@@ -2104,7 +2148,7 @@ app.post('/api/blessing/:id/send', async (req, res) => {
           `
         })
         console.log('Blessing notification sent to:', blessing.email)
-      } catch(e) {
+      } catch (e) {
         console.log('Blessing email error:', e.message)
       }
     }
@@ -2122,7 +2166,7 @@ app.post('/api/blessing/:id/send', async (req, res) => {
       poweredBy: 'Oro GRAIL | Solana Devnet'
     })
 
-  } catch(e) {
+  } catch (e) {
     console.log('Send blessing error:', e.message)
     res.status(500).json({ success: false, error: e.message })
   }
@@ -2135,4 +2179,6 @@ app.listen(process.env.PORT || 3000, () => {
   console.log('GRAIL:', process.env.GRAIL_BASE_URL ? 'Connected' : 'Missing')
   console.log('Supabase:', process.env.SUPABASE_URL ? 'Connected' : 'Missing')
   console.log('Email:', process.env.EMAIL_USER ? 'Connected' : 'Missing')
+  console.log('Base URL:', BASE_URL)
+  console.log('Google callback:', GOOGLE_REDIRECT_URI)
 })

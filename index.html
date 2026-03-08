@@ -1,910 +1,534 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>G-Link - Gold Links for Weddings & Celebrations</title>
+  <title>G-Link - Send Gold as Easily as a Link</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            gold: {
+              DEFAULT: '#FFD700',
+              light: '#FFED4E',
+              dark: '#FFA500',
+            },
+            dark: {
+              DEFAULT: '#0a0a0a',
+              card: '#111111',
+              border: '#222222'
+            }
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 1s ease-out forwards',
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(40px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
-      background: linear-gradient(135deg, #000000 0%, #0A0A0A 50%, #000000 100%); 
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; 
-      font-weight: 600;
-      min-height: 100vh; 
-      color: #FFFFFF; 
+    body {
+      background-color: #0a0a0a;
+      color: #ffffff;
       overflow-x: hidden;
-      line-height: 1.6;
     }
-    
-    /* Header */
-    .header { 
-      background: rgba(0, 0, 0, 0.95); 
-      backdrop-filter: blur(20px); 
-      border-bottom: 2px solid rgba(255, 215, 0, 0.6); 
-      padding: 12px 32px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      position: fixed; 
-      top: 0; 
-      width: 100%; 
-      z-index: 1000; 
-      box-shadow: 0 4px 25px rgba(255, 215, 0, 0.2); 
-      height: 70px;
-    }
-    
-    .logo { 
-      color: #FFD700; 
-      font-size: 28px; 
-      font-weight: 800; 
-      text-decoration: none; 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      text-shadow: 0 2px 15px rgba(255, 215, 0, 0.5);
-    }
-    
-    .logo img {
-      width: 40px;
-      height: 40px;
-      filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.5));
-    }
-    
-    .header-nav { 
-      display: flex; 
-      gap: 24px; 
-      align-items: center; 
-    }
-    
-    .header-nav a { 
-      color: #FFFFFF; 
-      text-decoration: none; 
-      font-size: 16px; 
-      font-weight: 700; 
-      padding: 10px 20px; 
-      border-radius: 10px; 
-      transition: all 0.3s; 
-      border: 1px solid transparent; 
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .header-nav a:hover { 
-      background: rgba(255, 215, 0, 0.2); 
-      border-color: rgba(255, 215, 0, 0.5); 
-      color: #FFD700;
-      transform: translateY(-2px); 
-      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-    }
-    
-    /* Hero Section */
-    .hero { 
-      min-height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      text-align: center; 
-      padding: 140px 20px 60px; 
-      position: relative; 
-      background: radial-gradient(circle at 30% 40%, rgba(255, 215, 0, 0.2) 0%, transparent 50%),
-                  radial-gradient(circle at 70% 80%, rgba(255, 215, 0, 0.15) 0%, transparent 50%);
-    }
-    
-    .hero-content { 
-      max-width: 900px; 
-      position: relative; 
-      z-index: 1; 
-    }
-    
-    .hero-badge {
-      background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 237, 78, 0.15));
-      border: 2px solid rgba(255, 215, 0, 0.5);
-      border-radius: 50px;
-      padding: 8px 24px;
-      display: inline-block;
-      margin-bottom: 20px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #FFD700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
-    }
-    
-    .hero h1 { 
-      font-size: 56px; 
-      font-weight: 800; 
-      margin-bottom: 24px; 
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%); 
-      -webkit-background-clip: text; 
-      -webkit-text-fill-color: transparent; 
-      background-clip: text; 
-      line-height: 1.1; 
-    }
-    
-    .hero-subtitle {
-      font-size: 24px;
-      color: #FFFFFF;
-      margin-bottom: 16px;
-      font-weight: 700;
-      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
-    }
-    
-    .hero p { 
-      font-size: 20px; 
-      color: #FFFFFF; 
-      font-weight: 600;
-      margin-bottom: 40px; 
-      line-height: 1.7; 
-      max-width: 700px; 
-      margin-left: auto; 
-      margin-right: auto; 
-    }
-    
-    .hero-buttons { 
-      display: flex; 
-      gap: 20px; 
-      justify-content: center; 
-      flex-wrap: wrap; 
-      margin-bottom: 60px;
-    }
-    
-    .btn-primary { 
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
-      color: #000; 
-      padding: 18px 36px; 
-      border: none; 
-      border-radius: 14px; 
-      font-size: 18px; 
-      font-weight: 800; 
-      text-decoration: none; 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 12px; 
-      transition: all 0.3s; 
-      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4); 
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .btn-primary:hover { 
-      transform: translateY(-4px); 
-      box-shadow: 0 12px 40px rgba(255, 215, 0, 0.6); 
-      background: linear-gradient(135deg, #FFED4E 0%, #FFD700 100%);
-    }
-    
-    .btn-secondary { 
-      background: transparent; 
-      color: #FFFFFF; 
-      padding: 18px 36px; 
-      border: 2px solid #FFD700; 
-      border-radius: 14px; 
-      font-size: 18px; 
-      font-weight: 800; 
-      text-decoration: none; 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 12px; 
-      transition: all 0.3s; 
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    
-    .btn-secondary:hover { 
-      background: #FFD700; 
-      color: #000; 
-      transform: translateY(-4px); 
-      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
-    }
-    
-    /* Problem Section */
-    .problem-section {
-      padding: 100px 20px;
-      background: linear-gradient(135deg, rgba(10, 10, 10, 0.95), rgba(26, 26, 26, 0.9));
-      position: relative;
-    }
-    
-    .problem-section::before {
-      content: '';
+
+    .hero-bg-container {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23FFD700" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23FFA500" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-      opacity: 0.3;
+      inset: 0;
+      background-image: url('hero-bg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.5;
+      /* Opacity applies only to this div, not the content */
+      z-index: -20;
     }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
+
+    /* Scroll Reveal Classes */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
     }
-    
-    .section-header {
-      text-align: center;
-      margin-bottom: 80px;
+
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
     }
-    
-    .section-badge {
-      background: rgba(255, 215, 0, 0.2);
-      color: #FFD700;
-      padding: 8px 20px;
-      border-radius: 25px;
-      font-size: 14px;
-      font-weight: 700;
-      display: inline-block;
-      margin-bottom: 20px;
-      border: 2px solid rgba(255, 215, 0, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+
+    .stagger-1 {
+      transition-delay: 0.1s;
     }
-    
-    .section-title {
-      font-size: 42px;
-      font-weight: 800;
-      color: #FFFFFF;
-      text-shadow: 0 2px 15px rgba(255, 215, 0, 0.3);
-      margin-bottom: 20px;
-      margin-bottom: 20px;
+
+    .stagger-2 {
+      transition-delay: 0.2s;
     }
-    
-    .section-subtitle {
-      font-size: 20px;
-      color: #FFFFFF;
-      font-weight: 600;
-      max-width: 600px;
-      margin: 0 auto;
-      opacity: 0.9;
+
+    .stagger-3 {
+      transition-delay: 0.3s;
     }
-    
-    .problems-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 30px;
-      margin-top: 60px;
+
+    /* Custom Hide Scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
     }
-    
-    .problem-card {
-      background: rgba(0, 0, 0, 0.8);
-      border: 2px solid rgba(255, 215, 0, 0.3);
-      border-radius: 20px;
-      padding: 30px;
-      text-align: center;
-      transition: all 0.3s;
-      backdrop-filter: blur(10px);
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      /* IE and Edge */
+      scrollbar-width: none;
+      /* Firefox */
     }
-    
-    .problem-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(255, 215, 0, 0.6);
-      box-shadow: 0 15px 35px rgba(255, 215, 0, 0.2);
-    }
-    
-    .problem-icon {
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(135deg, #FFD700, #FFA500);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
-      font-size: 28px;
-      box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-    }
-    
-    .problem-card h3 {
-      font-size: 20px;
-      color: #FFD700;
-      margin-bottom: 15px;
-      font-weight: 800;
-      text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
-    }
-    
-    .problem-card p {
-      color: #FFFFFF;
-      font-weight: 600;
-      line-height: 1.6;
-      font-size: 15px;
-      opacity: 0.9;
-    }
-    
-    /* Solution Section */
-    .solution-section {
-      padding: 100px 20px;
-      background: linear-gradient(135deg, rgba(10, 10, 10, 0.95), rgba(26, 26, 26, 0.9));
-      position: relative;
-    }
-    
-    .solution-badge {
-      background: rgba(255, 215, 0, 0.2);
-      color: #FFD700;
-      padding: 8px 20px;
-      border-radius: 25px;
-      font-size: 14px;
-      font-weight: 700;
-      display: inline-block;
-      margin-bottom: 20px;
-      border: 2px solid rgba(255, 215, 0, 0.4);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    
-    .solutions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 40px;
-      margin-top: 60px;
-    }
-    
-    .solution-card {
-      background: rgba(0, 0, 0, 0.9);
-      border: 2px solid rgba(255, 215, 0, 0.4);
-      border-radius: 24px;
-      padding: 40px;
-      transition: all 0.3s;
-      backdrop-filter: blur(15px);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.1);
-    }
-    
-    .solution-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
-    }
-    
-    .solution-card:hover {
-      transform: translateY(-10px);
-      border-color: rgba(212, 175, 55, 0.8);
-      box-shadow: 0 20px 50px rgba(212, 175, 55, 0.3);
-    }
-    
-    .solution-number {
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, #FFD700, #FFA500);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: 800;
-      color: #000;
-      margin-bottom: 20px;
-    }
-    
-    .solution-card h3 {
-      font-size: 28px;
-      color: #FFD700;
-      margin-bottom: 15px;
-      font-weight: 700;
-    }
-    
-    .solution-card .subtitle {
-      font-size: 16px;
-      color: #FFA500;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-    
-    .solution-card p {
-      color: #ddd;
-      line-height: 1.7;
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
-    
-    .solution-features {
-      list-style: none;
-      padding: 0;
-    }
-    
-    .solution-features li {
-      color: #ccc;
-      margin-bottom: 10px;
-      padding-left: 25px;
-      position: relative;
-      font-size: 15px;
-    }
-    
-    .solution-features li::before {
-      content: '✓';
-      position: absolute;
-      left: 0;
-      color: #4CAF50;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    
-    /* Family Tree Section */
-    .family-tree-section {
-      padding: 100px 20px;
-      background: linear-gradient(135deg, rgba(40, 20, 60, 0.4), rgba(20, 40, 80, 0.3));
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .family-tree-section::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 1px, transparent 1px);
-      background-size: 50px 50px;
-      animation: float 20s ease-in-out infinite;
-    }
-    
+
+    /* Floating Animation for Hero Element */
     @keyframes float {
-      0%, 100% { transform: translate(0, 0) rotate(0deg); }
-      33% { transform: translate(30px, -30px) rotate(120deg); }
-      66% { transform: translate(-20px, 20px) rotate(240deg); }
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-20px);
+      }
     }
-    
-    .tree-showcase {
-      display: flex;
-      align-items: center;
-      gap: 60px;
-      max-width: 1200px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
+
+    .floating-gold {
+      animation: float 6s ease-in-out infinite;
     }
-    
-    .tree-content {
-      flex: 1;
-    }
-    
-    .tree-visual {
-      flex: 1;
-      position: relative;
-      min-height: 400px;
-    }
-    
-    .tree-container {
-      position: relative;
-      width: 100%;
-      height: 400px;
-      background: rgba(0, 0, 0, 0.8);
-      border-radius: 20px;
-      border: 2px solid rgba(212, 175, 55, 0.4);
+
+    /* Accordion transition styles */
+    .accordion-content {
+      transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, padding 0.4s ease-in-out;
+      max-height: 0;
+      opacity: 0;
       overflow: hidden;
-      backdrop-filter: blur(10px);
     }
-    
-    .tree-svg {
-      width: 100%;
-      height: 100%;
+
+    .accordion-item.active .accordion-content {
+      max-height: 2000px;
+      /* Increased to ensure large images don't clip */
+      opacity: 1;
     }
-    
-    .tree-branch {
-      stroke: #8B4513;
-      stroke-width: 3;
-      fill: none;
-    }
-    
-    .tree-leaf {
-      fill: #FFD700;
-      stroke: #FFA500;
-      stroke-width: 1;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .tree-leaf:hover {
-      fill: #FFA500;
-      transform: scale(1.2);
-    }
-    
-    .leaf-tooltip {
-      position: absolute;
-      background: rgba(0, 0, 0, 0.9);
-      color: #FFD700;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      pointer-events: none;
-      z-index: 10;
-      border: 1px solid rgba(212, 175, 55, 0.4);
-    }
-    
-    /* Stats Section */
-    .stats-section {
-      padding: 80px 20px;
-      background: rgba(0, 0, 0, 0.8);
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 40px;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-    
-    .stat-card {
-      text-align: center;
-      padding: 40px 20px;
-      background: rgba(0, 0, 0, 0.9);
-      border: 2px solid rgba(212, 175, 55, 0.3);
-      border-radius: 20px;
-      transition: all 0.3s;
-      backdrop-filter: blur(10px);
-    }
-    
-    .stat-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(212, 175, 55, 0.6);
-      box-shadow: 0 15px 35px rgba(212, 175, 55, 0.2);
-    }
-    
-    .stat-number {
-      font-size: 48px;
-      font-weight: 800;
-      color: #FFD700;
-      margin-bottom: 10px;
-      display: block;
-    }
-    
-    .stat-label {
-      font-size: 16px;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    
-    /* CTA Section */
-    .cta-section {
-      padding: 100px 20px;
-      background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(255, 165, 0, 0.05));
-      text-align: center;
-    }
-    
-    .cta-content {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    .cta-title {
-      font-size: 48px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 20px;
-    }
-    
-    .cta-subtitle {
-      font-size: 20px;
-      color: #ccc;
-      margin-bottom: 40px;
-    }
-    
-    /* Footer */
-    .footer {
-      background: rgba(0, 0, 0, 0.95);
-      padding: 60px 20px 30px;
-      border-top: 2px solid rgba(212, 175, 55, 0.3);
-    }
-    
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 40px;
-      margin-bottom: 40px;
-    }
-    
-    .footer-section h4 {
-      color: #FFD700;
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-    
-    .footer-section p, .footer-section a {
-      color: #aaa;
-      text-decoration: none;
-      line-height: 1.6;
-      margin-bottom: 10px;
-      display: block;
-    }
-    
-    .footer-section a:hover {
-      color: #FFD700;
-    }
-    
-    .footer-bottom {
-      text-align: center;
-      padding-top: 30px;
-      border-top: 1px solid rgba(212, 175, 55, 0.2);
-      color: #666;
-    }
-    
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-      .hero h1 { font-size: 42px; }
-      .hero p { font-size: 18px; }
-      .hero-buttons { flex-direction: column; align-items: center; }
-      .btn-primary, .btn-secondary { width: 100%; max-width: 300px; justify-content: center; }
-      .section-title { font-size: 32px; }
-      .tree-showcase { flex-direction: column; }
-      .header { padding: 12px 20px; }
-      .header-nav { display: none; }
-      .solutions-grid { grid-template-columns: 1fr; }
-      .problems-grid { grid-template-columns: 1fr; }
+
+    .accordion-item.active .accordion-icon {
+      transform: rotate(45deg);
     }
   </style>
 </head>
-<body>
-  <div class="header">
-    <a href="index.html" class="logo">
-      <img src="logo.svg" alt="G-Link Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-      <span style="display:none;">🪙</span>
+
+<body class="antialiased selection:bg-gold selection:text-black">
+
+  <!-- Navigation -->
+  <nav class="fixed w-full z-50 px-6 py-6 flex justify-between items-center transition-all duration-300" id="navbar">
+    <a href="/" class="text-2xl font-bold tracking-tight text-white flex items-center gap-2 group">
+      <span class="text-gold group-hover:rotate-12 transition-transform duration-300">🪙</span>
+      G-Link
     </a>
-    <div class="header-nav">
-      <a href="signup.html">Sign Up</a>
-      <a href="login.html">Login</a>
+    <div class="hidden md:flex items-center gap-8 text-sm font-semibold tracking-wide text-gray-300">
+      <a href="#about" class="hover:text-gold transition-colors">ABOUT</a>
+      <a href="#specialty" class="hover:text-gold transition-colors">FEATURES</a>
+      <a href="#portfolio" class="hover:text-gold transition-colors">SHOWCASE</a>
+      <a href="#how" class="hover:text-gold transition-colors">HOW IT WORKS</a>
     </div>
-  </div>
+    <div class="flex items-center gap-4">
+      <a href="login.html"
+        class="hidden md:block text-sm font-semibold text-white hover:text-gold transition-colors">Log In</a>
+      <a href="signup.html"
+        class="bg-white text-black px-6 py-2.5 rounded-full text-sm font-bold hover:bg-gold transition-colors duration-300 uppercase tracking-widest">
+        Sign Up
+      </a>
+    </div>
+  </nav>
 
   <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-content">
-      <div class="hero-badge">✨ The Future of Wedding Gifts</div>
-      <h1>Gold Links for Weddings & Celebrations</h1>
-      <div class="hero-subtitle">Send gold as easily as sending a WhatsApp message</div>
-      <p>Transform wedding gifting with beautiful family trees, instant gold links, and zero crypto complexity. Perfect for the $40B+ wedding market.</p>
-      <div class="hero-buttons">
-        <a href="signup.html" class="btn-primary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-          Create Wedding Registry
-        </a>
-        <a href="create.html" class="btn-secondary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          Send Gold Link
-        </a>
-      </div>
+  <section class="relative min-h-screen flex flex-col justify-center items-center pt-32 pb-20 px-6">
+
+    <!-- The background image container with opacity -->
+    <div class="hero-bg-container pointer-events-none"></div>
+
+    <!-- Dark overlay for text readability over the image -->
+    <div class="absolute inset-0 bg-black/10 pointer-events-none -z-10"></div>
+
+    <div
+      class="w-full max-w-7xl flex justify-between items-start text-xs font-bold tracking-[0.2em] text-gray-400 mb-12 uppercase animate-fade-in-up">
+      <span>[GLOBAL, ANYWHERE]</span>
+    </div>
+
+    <div class="flex flex-col items-center text-center max-w-5xl z-10">
+      <h1
+        class="text-6xl md:text-8xl lg:text-[110px] font-extrabold leading-[0.9] tracking-tight mb-8 animate-fade-in-up stagger-1">
+        WHERE ASSETS<br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">BECOME
+          MEMORIES</span>
+      </h1>
+      <p
+        class="text-xl md:text-2xl text-gray-400 max-w-3xl mb-12 font-medium leading-relaxed animate-fade-in-up stagger-2">
+        Delivering seamless digital gold gifting for weddings, celebrations, and individuals across the globe, with
+        speed, security, and elegance.
+      </p>
+      <a href="create.html"
+        class="bg-white text-black px-10 py-5 rounded-full text-lg font-bold hover:bg-gold hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,215,0,0.3)] animate-fade-in-up stagger-3">
+        Create Gold Link
+      </a>
     </div>
   </section>
-  <!-- Problem Section -->
-  <section class="problem-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-badge">THE PROBLEM</div>
-        <h2 class="section-title">Traditional Gold Gifting is Broken</h2>
-        <p class="section-subtitle">A $40 billion+ wedding market with terrible user experience</p>
+
+  <!-- About Section -->
+  <section id="about" class="py-32 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-24 reveal">
+        <p class="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-6">[ABOUT US]</p>
+        <h2 class="text-4xl md:text-6xl font-bold leading-tight">Gifts That Speak<br>Louder Than Words.</h2>
       </div>
-      <div class="problems-grid">
-        <div class="problem-card">
-          <div class="problem-icon">💍</div>
-          <h3>Physical Gold Jewelry</h3>
-          <p>Risky to transport (theft), may not match recipient's taste, hard to invest or sell later</p>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <!-- left images block -->
+        <div class="flex justify-center flex-col md:flex-row gap-6 reveal stagger-1">
+          <div
+            class="rounded-[2.5rem] overflow-hidden w-full md:w-2/3 shadow-2xl relative aspect-square md:aspect-[4/3] group">
+            <img src="Darshan Raval & Dharal Surelia.jpeg" alt="Wedding celebration"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+          </div>
+          <div
+            class="rounded-[2.5rem] overflow-hidden w-full md:w-1/3 aspect-square mt-0 md:mt-24 shadow-2xl relative group">
+            <img src="wedding.jpeg" alt="Joyful moments"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+          </div>
         </div>
-        <div class="problem-card">
-          <div class="problem-icon">💰</div>
-          <h3>Cash in Envelopes</h3>
-          <p>Feels impersonal and transactional, easily forgotten who gave what amount</p>
-        </div>
-        <div class="problem-card">
-          <div class="problem-icon">🔐</div>
-          <h3>Existing Digital Platforms</h3>
-          <p>Require crypto knowledge, wallet setup, seed phrases. Too complicated for grandparents</p>
-        </div>
-        <div class="problem-card">
-          <div class="problem-icon">💔</div>
-          <h3>No Emotional Connection</h3>
-          <p>Current solutions are just transactions, not memorable experiences or lasting memories</p>
+
+        <!-- right text block -->
+        <div class="lg:pl-16 reveal stagger-2">
+          <p class="text-xl md:text-2xl text-gray-300 leading-relaxed font-medium mb-10">
+            Turning fleeting celebrations into timeless investments—where every transaction captures emotion and
+            prosperity. We blend blockchain technology, precision, and passion to craft stunning family trees that tell
+            your legacy's story.
+          </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Solution Section -->
-  <section class="solution-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="solution-badge">THE SOLUTION</div>
-        <h2 class="section-title">Two Core Innovations</h2>
-        <p class="section-subtitle">Making gold gifting instant, safe, and beautiful</p>
-      </div>
-      <div class="solutions-grid">
-        <div class="solution-card">
-          <div class="solution-number">1</div>
-          <h3>Gold Links</h3>
-          <div class="subtitle">Tiplink for Gold</div>
-          <p>Anyone can send gold by creating a simple URL link. No crypto knowledge needed.</p>
-          <ul class="solution-features">
-            <li>Uncle creates gold link with ₹5,000</li>
-            <li>Gets URL: glink.gold/bless-wedding123</li>
-            <li>Sends via WhatsApp to couple</li>
-            <li>Couple clicks & sees: "Uncle Vijay sent you 0.73g gold!"</li>
-            <li>They claim with one click - no wallet setup</li>
-            <li>Gold goes to secure vault instantly</li>
-          </ul>
+  <!-- Specialty/Features Section -->
+  <section id="specialty" class="py-32 pl-6 md:pl-12 overflow-hidden bg-dark-card border-y border-dark-border relative">
+    <div class="max-w-7xl mx-auto pr-6 text-center mb-24 reveal">
+      <p class="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-6">[OUR SPECIALTY]</p>
+      <h2 class="text-4xl md:text-6xl font-bold leading-tight">Crafted for Celebrations,<br>Built for Impact.</h2>
+    </div>
+
+    <!-- Horizontal scroll container -->
+    <div class="flex gap-6 overflow-x-auto pb-16 pt-8 pr-12 no-scrollbar reveal stagger-1"
+      style="scroll-snap-type: x mandatory;">
+
+      <!-- Card 1 -->
+      <div
+        class="min-w-[320px] md:min-w-[400px] h-[450px] bg-dark rounded-[2.5rem] p-10 flex flex-col border border-dark-border hover:border-gray-500 transition-colors"
+        style="scroll-snap-align: start;">
+        <div class="w-16 h-16 rounded-full bg-dark-border flex items-center justify-center mb-auto">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+            </path>
+          </svg>
         </div>
-        <div class="solution-card">
-          <div class="solution-number">2</div>
-          <h3>Wedding Registries</h3>
-          <div class="subtitle">Beautiful Pages with Family Tree</div>
-          <p>Couples create stunning registry pages where guests contribute gold to a growing family tree.</p>
-          <ul class="solution-features">
-            <li>Couple creates: priya-rahul.glink.gold</li>
-            <li>Beautiful design with photos and story</li>
-            <li>Each gift appears as golden leaf on tree</li>
-            <li>Tree grows in real-time as people contribute</li>
-            <li>Every leaf shows giver's name and blessing</li>
-            <li>Creates living memory of everyone's love</li>
-          </ul>
-        </div>
+        <h3 class="text-3xl font-bold mb-4">Gold Links</h3>
+        <p class="text-gray-400 text-lg">Send real digital gold through a simple, shareable link on WhatsApp or SMS.</p>
       </div>
+
+      <!-- Card 2 -->
+      <div
+        class="min-w-[320px] md:min-w-[400px] h-[450px] bg-dark rounded-[2.5rem] p-10 flex flex-col border border-dark-border hover:border-gray-500 transition-colors"
+        style="scroll-snap-align: start;">
+        <div class="w-16 h-16 rounded-full bg-dark-border flex items-center justify-center mb-auto">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+            </path>
+          </svg>
+        </div>
+        <h3 class="text-3xl font-bold mb-4">Secure Vaults</h3>
+        <p class="text-gray-400 text-lg">Backed by 24k real physical gold via the GRAIL ecosystem. Audited and secure.
+        </p>
+      </div>
+
+      <!-- Highlighted Card 3 -->
+      <div
+        class="min-w-[320px] md:min-w-[400px] h-[450px] bg-gold text-black rounded-[2.5rem] p-10 flex flex-col shadow-[0_20px_50px_rgba(255,215,0,0.15)] transform -translate-y-4"
+        style="scroll-snap-align: start;">
+        <div class="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center mb-auto">
+          <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z">
+            </path>
+          </svg>
+        </div>
+        <h3 class="text-3xl font-extrabold mb-4">Family Trees</h3>
+        <p class="text-black/80 text-lg font-medium">Beautiful visual registries for weddings. Watch your gifts grow
+          into golden leaves.</p>
+      </div>
+
+      <!-- Card 4 -->
+      <div
+        class="min-w-[320px] md:min-w-[400px] h-[450px] bg-dark rounded-[2.5rem] p-10 flex flex-col border border-dark-border hover:border-gray-500 transition-colors"
+        style="scroll-snap-align: start;">
+        <div class="w-16 h-16 rounded-full bg-dark-border flex items-center justify-center mb-auto">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+            </path>
+          </svg>
+        </div>
+        <h3 class="text-3xl font-bold mb-4">Zero Crypto setup</h3>
+        <p class="text-gray-400 text-lg">No seed phrases or wallet hassle. Claim your gold with just a phone number.</p>
+      </div>
+
     </div>
   </section>
-  <!-- Family Tree Showcase -->
-  <section class="family-tree-section">
-    <div class="tree-showcase">
-      <div class="tree-content">
-        <div class="solution-badge">LIVE FAMILY TREE</div>
-        <h2 class="section-title">Watch Love Grow in Real-Time</h2>
-        <p class="section-subtitle">Every gold gift becomes a golden leaf on your family tree. Each leaf tells a story, shows a blessing, creates a memory that lasts forever.</p>
-        <div style="margin-top: 30px;">
-          <div style="color: #4CAF50; font-size: 16px; margin-bottom: 10px;">✓ Real-time visualization</div>
-          <div style="color: #4CAF50; font-size: 16px; margin-bottom: 10px;">✓ Personal messages on each leaf</div>
-          <div style="color: #4CAF50; font-size: 16px; margin-bottom: 10px;">✓ Beautiful 3D animations</div>
-          <div style="color: #4CAF50; font-size: 16px; margin-bottom: 10px;">✓ Lasting digital memory</div>
-        </div>
+
+  <!-- Showcase / Portfolio Section -->
+  <section id="portfolio" class="py-32 px-6 bg-black relative">
+    <div class="max-w-7xl mx-auto flex flex-col items-center">
+      <div class="text-center mb-20 reveal">
+        <p class="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-6">[OUR SHOWCASE]</p>
+        <h2 class="text-4xl md:text-6xl font-bold leading-tight">Your Blessings,<br>Captured Forever.</h2>
       </div>
-      <div class="tree-visual">
-        <div class="tree-container">
-          <svg class="tree-svg" viewBox="0 0 400 400">
-            <!-- Tree trunk -->
-            <path class="tree-branch" d="M200 350 L200 250 L180 200 L220 200 Z"/>
-            <!-- Main branches -->
-            <path class="tree-branch" d="M200 250 L150 200 L100 180"/>
-            <path class="tree-branch" d="M200 250 L250 200 L300 180"/>
-            <path class="tree-branch" d="M200 200 L160 150 L120 130"/>
-            <path class="tree-branch" d="M200 200 L240 150 L280 130"/>
-            <path class="tree-branch" d="M200 150 L170 100 L140 80"/>
-            <path class="tree-branch" d="M200 150 L230 100 L260 80"/>
-            
-            <!-- Golden leaves (gifts) -->
-            <circle class="tree-leaf" cx="100" cy="180" r="8" data-tooltip="Uncle Raj: ₹5,000 - Blessings for your new journey!"/>
-            <circle class="tree-leaf" cx="300" cy="180" r="8" data-tooltip="Aunt Priya: ₹3,000 - May your love shine forever"/>
-            <circle class="tree-leaf" cx="120" cy="130" r="8" data-tooltip="Grandma: ₹10,000 - My precious grandchildren"/>
-            <circle class="tree-leaf" cx="280" cy="130" r="8" data-tooltip="College Friends: ₹2,100 - Party fund! 🎉"/>
-            <circle class="tree-leaf" cx="140" cy="80" r="8" data-tooltip="Mom & Dad: ₹21,000 - Our love and blessings"/>
-            <circle class="tree-leaf" cx="260" cy="80" r="8" data-tooltip="Office Team: ₹5,100 - Congratulations from all of us!"/>
-            <circle class="tree-leaf" cx="200" cy="60" r="10" data-tooltip="Best Friend: ₹11,000 - For my favorite couple ❤️"/>
-          </svg>
-          <div class="leaf-tooltip" id="tooltip" style="display: none;"></div>
+
+      <!-- Large Center Image -->
+      <div
+        class="w-full max-w-4xl rounded-[3rem] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-dark-border/50 reveal stagger-1 group relative">
+        <img src="virat & anushaka.jpeg" alt="Virat and Anushka Wedding"
+          class="w-full h-[600px] object-cover group-hover:scale-105 transition-transform duration-[10s] ease-out">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div class="absolute bottom-10 left-10 right-10 flex justify-between items-end">
+          <div>
+            <h3 class="text-3xl text-gold font-bold mb-2">Virat & Anushaka's Wedding</h3>
+            <p class="text-gray-300 text-lg">248 Guests • 150g Gold Gifted</p>
+          </div>
+          <a href="blessing.html"
+            class="bg-white/10 backdrop-blur-md rounded-full px-6 py-3 font-bold border border-white/20 hover:bg-white hover:text-black transition-colors">View
+            Registry</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Stats Section -->
-  <section class="stats-section">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">Market Opportunity</h2>
-        <p class="section-subtitle">Massive market with clear path to success</p>
+  <!-- How We Work (Accordion) Section -->
+  <section id="how" class="py-32 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-24 reveal">
+        <p class="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase mb-6">[HOW IT WORKS]</p>
+        <h2 class="text-4xl md:text-6xl font-bold leading-tight">Simplicity First,<br>Elegance Always.</h2>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-number">10M</span>
-          <div class="stat-label">Weddings per year (India)</div>
+
+      <div class="max-w-4xl flex flex-col gap-6 mx-auto">
+        <!-- Accordion Item 1 -->
+        <div class="accordion-item bg-dark-card border border-dark-border rounded-[2rem] overflow-hidden reveal">
+          <button class="w-full px-8 py-8 flex justify-between items-center text-left focus:outline-none"
+            onclick="toggleAccordion(this)">
+            <div class="flex items-center gap-6">
+              <span
+                class="w-14 h-14 rounded-full bg-gold/10 text-gold flex items-center justify-center text-xl font-bold">01</span>
+              <h3 class="text-3xl font-bold">Create a Link</h3>
+            </div>
+          </button>
+          <div class="accordion-content bg-dark">
+            <div
+              class="px-8 pb-8 pt-0 flex flex-col md:flex-row gap-10 items-center border-t border-dark-border pt-8 mt-4 mx-8">
+              <div class="flex-1 text-gray-400 text-lg space-y-4 font-medium">
+                <p>We start by understanding your gifting needs. Just select an amount, pay via UPI, and get an instant
+                  gold link.</p>
+                <ul class="space-y-3 mt-6">
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Choose any
+                    amount from ₹100</li>
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Add a
+                    personalized message</li>
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Paid securely
+                    via Razorpay</li>
+                </ul>
+              </div>
+              <div class="w-full md:w-5/12 aspect-[4/3] rounded-2xl overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80"
+                  alt="Payment" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-number">$40B+</span>
-          <div class="stat-label">Wedding gift market</div>
+
+        <!-- Accordion Item 2 -->
+        <div
+          class="accordion-item bg-dark-card border border-dark-border rounded-[2rem] overflow-hidden reveal stagger-1">
+          <button class="w-full px-8 py-8 flex justify-between items-center text-left focus:outline-none"
+            onclick="toggleAccordion(this)">
+            <div class="flex items-center gap-6">
+              <span
+                class="w-14 h-14 rounded-full bg-gold/10 text-gold flex items-center justify-center text-xl font-bold">02</span>
+              <h3 class="text-3xl font-bold">Share via WhatsApp</h3>
+            </div>
+          </button>
+          <div class="accordion-content bg-dark">
+            <div
+              class="px-8 pb-8 pt-0 flex flex-col md:flex-row gap-10 items-center border-t border-dark-border pt-8 mt-4 mx-8">
+              <div class="flex-1 text-gray-400 text-lg space-y-4 font-medium">
+                <p>No app downloads needed. Simply send the unique URL to the recipient on WhatsApp, iMessage, or email.
+                </p>
+                <ul class="space-y-3 mt-6">
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Beautiful
+                    preview on messaging apps</li>
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Works on any
+                    device globally</li>
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Secure,
+                    one-time use links</li>
+                </ul>
+              </div>
+              <div class="w-full md:w-5/12 aspect-[4/3] rounded-2xl overflow-hidden">
+                <img src="whatsapp-icon.png" alt="WhatsApp messaging" class="w-full h-full object-cover">
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-number">₹15L</span>
-          <div class="stat-label">Average per wedding</div>
+
+        <!-- Accordion Item 3 -->
+        <div
+          class="accordion-item bg-dark-card border border-dark-border rounded-[2rem] overflow-hidden reveal stagger-2">
+          <button class="w-full px-8 py-8 flex justify-between items-center text-left focus:outline-none"
+            onclick="toggleAccordion(this)">
+            <div class="flex items-center gap-6">
+              <span
+                class="w-14 h-14 rounded-full bg-gold/10 text-gold flex items-center justify-center text-xl font-bold">03</span>
+              <h3 class="text-3xl font-bold">Claim in 1-Click</h3>
+            </div>
+          </button>
+          <div class="accordion-content bg-dark">
+            <div
+              class="px-8 pb-8 pt-0 flex flex-col md:flex-row gap-10 items-center border-t border-dark-border pt-8 mt-4 mx-8">
+              <div class="flex-1 text-gray-400 text-lg space-y-4 font-medium">
+                <p>The recipient opens the link, logs in with their phone number or email, and claims the gold instantly
+                  to their secure vault.</p>
+                <ul class="space-y-3 mt-6">
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Zero fees for
+                    receiving</li>
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Instant
+                    blockchain settlement</li>
+                  <li class="flex items-center gap-3"><span class="w-2 h-2 bg-gold rounded-full"></span> Backed by Oro
+                    API</li>
+                </ul>
+              </div>
+              <div
+                class="w-full md:w-5/12 aspect-[4/3] rounded-2xl overflow-hidden flex items-center justify-center bg-zinc-900 border border-dark-border">
+                <span class="text-6xl">🪙</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="stat-card">
-          <span class="stat-number">100+</span>
-          <div class="stat-label">Guests per wedding</div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- CTA Section -->
-  <section class="cta-section">
-    <div class="cta-content">
-      <h2 class="cta-title">Ready to Transform Wedding Gifting?</h2>
-      <p class="cta-subtitle">Join thousands of couples creating beautiful memories with gold</p>
-      <div class="hero-buttons">
-        <a href="signup.html" class="btn-primary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
-          Start Your Registry
-        </a>
-        <a href="create.html" class="btn-secondary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          Send Gold Gift
-        </a>
+
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-section">
-        <h4>G-Link</h4>
-        <p>Transforming wedding gifting with beautiful family trees and instant gold links. Powered by Oro GRAIL on Solana blockchain.</p>
+  <footer class="bg-black border-t border-dark-border/50 py-12 px-6">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+      <a href="/" class="text-2xl font-bold text-white flex items-center gap-2">
+        <span class="text-gold">🪙</span> G-Link
+      </a>
+      <div class="text-gray-500 text-sm font-medium">
+        &copy; 2026 G-Link. Powered by Oro GRAIL. All rights reserved.
       </div>
-      <div class="footer-section">
-        <h4>Product</h4>
-        <a href="create.html">Send Gold Link</a>
-        <a href="wedding-registry.html">Wedding Registry</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="#">How It Works</a>
+      <div class="flex gap-6">
+        <a href="https://twitter.com" target="_blank"
+          class="w-12 h-12 rounded-full bg-dark-card border border-dark-border flex items-center justify-center hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
+          </svg>
+        </a>
       </div>
-      <div class="footer-section">
-        <h4>Company</h4>
-        <a href="#">About Us</a>
-        <a href="#">Contact</a>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-      </div>
-      <div class="footer-section">
-        <h4>Support</h4>
-        <a href="#">Help Center</a>
-        <a href="#">Security</a>
-        <a href="#">API Documentation</a>
-        <a href="#">Status</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 G-Link. Powered by Oro GRAIL | Solana Blockchain. All rights reserved.</p>
     </div>
   </footer>
 
   <script>
-    // Interactive family tree tooltips
-    document.addEventListener('DOMContentLoaded', function() {
-      const leaves = document.querySelectorAll('.tree-leaf');
-      const tooltip = document.getElementById('tooltip');
-      
-      leaves.forEach(leaf => {
-        leaf.addEventListener('mouseenter', function(e) {
-          const tooltipText = this.getAttribute('data-tooltip');
-          tooltip.textContent = tooltipText;
-          tooltip.style.display = 'block';
-          tooltip.style.left = e.pageX + 10 + 'px';
-          tooltip.style.top = e.pageY - 10 + 'px';
-        });
-        
-        leaf.addEventListener('mouseleave', function() {
-          tooltip.style.display = 'none';
-        });
-        
-        leaf.addEventListener('mousemove', function(e) {
-          tooltip.style.left = e.pageX + 10 + 'px';
-          tooltip.style.top = e.pageY - 10 + 'px';
-        });
+    // Smooth scroll for anchor tags
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth'
+          });
+        }
       });
+    });
+
+    // Accordion Logic
+    function toggleAccordion(btn) {
+      const item = btn.closest('.accordion-item');
+
+      // If already active, don't close it (always keep one open)
+      if (item.classList.contains('active')) {
+        return;
+      }
+
+      // Close all other accordions
+      document.querySelectorAll('.accordion-item').forEach(acc => {
+        acc.classList.remove('active');
+      });
+
+      // Open current
+      item.classList.add('active');
+    }
+
+    // Initialize first accordion as active
+    document.querySelector('.accordion-item').classList.add('active');
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('navbar');
+      if (window.scrollY > 50) {
+        nav.classList.add('bg-black/80', 'backdrop-blur-md', 'border-b', 'border-dark-border', 'py-4');
+        nav.classList.remove('py-6');
+      } else {
+        nav.classList.remove('bg-black/80', 'backdrop-blur-md', 'border-b', 'border-dark-border', 'py-4');
+        nav.classList.add('py-6');
+      }
+    });
+
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.15
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target); // Reveal only once
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => {
+      observer.observe(el);
     });
   </script>
 </body>
+
 </html>

@@ -1,187 +1,402 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>You've Been Blessed! - G-Link</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-          registration.unregister();
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Manrope', 'sans-serif'],
+          },
+          colors: {
+            gold: {
+              DEFAULT: '#FFD700',
+              light: '#FFED4E',
+              dark: '#FFA500',
+            },
+            dark: {
+              DEFAULT: '#0a0a0a',
+              card: '#111111',
+              border: '#222222'
+            }
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
         }
-      });
+      }
     }
   </script>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="enhanced-styles.css">
-  <script src="wallet.js"></script>
   <style>
-    :root {
-      --gold-primary: #D4AF37;
-      --gold-light: #F4D03F;
-      --gold-dark: #B8941E;
-      --bg-dark: #0a0a0a;
-      --bg-card: #161616;
-      --bg-elevated: #1f1f1f;
-      --text-light: #f0f0f0;
-      --text-muted: #a0a0a0;
-      --border-gold: rgba(212, 175, 55, 0.3);
-      --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    body {
+      background-color: #0a0a0a;
+      color: #ffffff;
     }
-    
-    .claim-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
-    .claim-card { max-width: 480px; width: 100%; text-align: center; padding: 2rem; }
-    .claim-amount { font-size: 2.5rem; font-weight: 700; color: var(--gold-primary); margin: 1rem 0; }
-    .claim-message { background: var(--bg-card); padding: 1.5rem; border-radius: 16px; margin: 1.5rem 0; text-align: left; border-left: 4px solid var(--gold-primary); }
-    .claim-options { display: grid; gap: 1rem; margin-top: 2rem; text-align: left; }
-    .claim-option { padding: 1rem; background: var(--bg-card); border-radius: 16px; border: 1px solid rgba(212,175,55,0.2); cursor: pointer; transition: var(--transition); }
-    .claim-option:hover, .claim-option.selected { border-color: var(--gold-primary); box-shadow: var(--shadow-gold); }
-    .claim-option h4 { color: var(--gold-primary); margin-bottom: 0.5rem; }
-    .success-view { display: none; }
-    .success-view.active { display: block; animation: fadeIn 0.5s; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .btn-gold { background: linear-gradient(135deg, var(--gold-primary) 0%, var(--gold-dark) 100%); color: #000; font-weight: 700; transition: var(--transition); }
-    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3); }
-    .btn-outline-gold { background: transparent; border: 2px solid var(--gold-primary); color: var(--gold-primary); font-weight: 700; transition: var(--transition); }
-    .btn-outline-gold:hover { background: var(--gold-primary); color: #000; box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2); }
+
+    .bg-site {
+      background-image: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
+      background-attachment: fixed;
+    }
+
+    .glass-nav {
+      background: rgba(10, 10, 10, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    }
   </style>
 </head>
-<body>
-  <div id="preloader" class="preloader" style="display:none!important;"><div class="spinner"></div></div>
 
-  <header class="bg-card border-b border-gold py-4 px-6 shadow-lg">
-    <div class="max-w-6xl mx-auto flex items-center">
-      <a href="index.html" class="flex items-center text-gold font-bold text-xl hover:text-gold-light transition">
-        <img src="logo.svg" alt="G-Link Logo" class="w-8 h-8 mr-2">
-        <span class="hidden sm:inline">G-Link</span>
+<body class="bg-dark text-white bg-site font-sans min-h-screen flex flex-col overflow-x-hidden relative">
+
+  <!-- Fullscreen Global Loader (Initial Load) -->
+  <div id="globalLoader"
+    class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-dark/95 backdrop-blur-3xl transition-opacity duration-700">
+    <div class="relative flex items-center justify-center mb-6">
+      <div class="absolute w-32 h-32 bg-gold/20 rounded-full blur-2xl animate-pulse"></div>
+      <div
+        class="w-16 h-16 border-4 border-dark-border border-t-gold rounded-full animate-spin relative z-10 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+      </div>
+    </div>
+    <h2 class="text-xl font-extrabold text-white tracking-widest uppercase mb-2 animate-pulse drop-shadow-md">Accessing
+      Vault<span class="text-gold">...</span></h2>
+    <div
+      class="text-xs text-gold font-bold uppercase tracking-widest bg-gold/10 border border-gold/20 px-3 py-1 rounded-full flex items-center gap-2 animate-pulse">
+      <div class="w-1.5 h-1.5 rounded-full bg-gold animate-pulse"></div> Secure Connection
+    </div>
+  </div>
+
+  <nav class="glass-nav sticky top-0 z-50 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-20 items-center">
+        <!-- Logo -->
+        <a href="/" class="text-xl font-bold tracking-tight text-white flex items-center gap-2 group mr-2">
+          <span class="text-gold group-hover:rotate-12 transition-transform duration-300">🪙</span>
+          <span class="hidden sm:inline">G-Link</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="msgBox" class="hidden max-w-lg mx-auto mt-6 z-50 relative"></div>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center px-4 py-12 relative z-10">
+
+    <!-- Invalid Link / Error State -->
+    <div id="errorCard"
+      class="hidden bg-dark-card border border-red-500/30 rounded-[2rem] p-10 max-w-md w-full shadow-[0_0_50px_rgba(239,68,68,0.05)] text-center animate-fade-in-up">
+      <div
+        class="w-20 h-20 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+        <i data-lucide="alert-triangle" class="w-10 h-10 text-red-500"></i>
+      </div>
+      <h2 class="text-3xl font-extrabold text-white mb-3 tracking-tight">Link Invalid or Expired</h2>
+      <p id="errorTxt" class="text-gray-400 font-medium mb-8 leading-relaxed">This gold link may have already been
+        claimed or does not exist.</p>
+      <div id="alreadyClaimedInfo" class="hidden text-left bg-dark/50 border border-dark-border rounded-xl p-5 mb-8">
+        <div class="flex items-center gap-2 text-green-400 mb-2">
+          <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+          <span class="text-xs font-bold tracking-widest uppercase">Successfully Claimed</span>
+        </div>
+        <p class="text-gray-300 text-sm"><span id="claimedGoldAmount" class="font-bold text-gold"></span> gold was
+          claimed by <span id="claimerName" class="font-bold"></span></p>
+        <p class="text-gray-500 text-xs mt-1" id="claimedDate"></p>
+      </div>
+      <a href="/"
+        class="inline-flex items-center justify-center w-full bg-dark border border-dark-border text-gray-300 py-4 rounded-xl font-bold hover:text-gold hover:border-gold/30 transition-all uppercase text-sm tracking-widest gap-2">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Your Own Link
       </a>
     </div>
-  </header>
 
-  <main class="claim-page">
-    <div class="claim-card" id="linkInfo">
-      <h1 style="font-size: 1.75rem; color: var(--gold-primary);">You've Been Blessed! 🎉</h1>
-      <p id="senderLabel" style="color: var(--text-muted); margin-top: 0.5rem;">From <strong id="senderName">Someone special</strong></p>
-      <div class="claim-amount" id="amountINR">₹5,000</div>
-      <p id="goldGrams" style="color: var(--gold-primary);">≈ 0.77g of gold</p>
-      <div class="claim-message" id="messageBox" style="display: none;">
-        <strong>Message:</strong>
-        <p id="message" style="margin-top: 0.5rem;"></p>
+    <!-- Claim Card -->
+    <div id="claimCard"
+      class="hidden bg-dark-card border border-dark-border rounded-[2.5rem] p-8 sm:p-12 w-full max-w-xl shadow-[0_0_50px_rgba(255,215,0,0.03)] relative overflow-hidden group animate-fade-in-up">
+      <div
+        class="absolute -top-40 -right-40 w-80 h-80 bg-gold/5 blur-[100px] rounded-full pointer-events-none group-hover:bg-gold/10 transition-colors duration-700">
       </div>
-      <button class="btn-gold" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1.5rem; border-radius: 16px;" id="claimBtn" onclick="claimGold()">
-        CLAIM YOUR GOLD
-      </button>
-      <div id="msg" class="msg-box"></div>
-      <div class="claim-options" id="claimForm">
-        <h3 style="color: var(--gold-primary); margin-bottom: 1rem;">Enter your details to claim:</h3>
-        <input type="text" id="claimerName" placeholder="Your Name" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-gold); border-radius: 12px; background: var(--bg-card); color: var(--text-light); margin-bottom: 1rem;">
-        <input type="email" id="claimerEmail" placeholder="Your Email" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-gold); border-radius: 12px; background: var(--bg-card); color: var(--text-light); margin-bottom: 1rem;">
-        <input type="tel" id="claimerPhone" placeholder="Your Phone" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-gold); border-radius: 12px; background: var(--bg-card); color: var(--text-light); margin-bottom: 1rem;">
+
+      <div class="text-center relative z-10 mb-8 pt-4">
+        <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">You've Been Blessed! <span
+            class="text-gold animate-pulse">🎉</span></h1>
+        <p class="text-gray-400 font-medium leading-relaxed max-w-sm mx-auto">From <strong id="senderName"
+            class="text-white">Someone special</strong></p>
+      </div>
+
+      <div
+        class="bg-dark/50 border border-dark-border rounded-2xl p-6 text-center mb-6 relative z-10 cursor-default group/amount transition-all hover:border-gold/30">
+        <div id="amountINR"
+          class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-light mb-2 drop-shadow-md tracking-tight group-hover/amount:scale-105 transition-transform duration-300">
+          ₹0</div>
+        <div id="goldGrams" class="text-gold font-bold uppercase tracking-widest text-sm">≈ 0g of gold</div>
+      </div>
+
+      <div id="messageBox" class="hidden bg-dark/30 border-l-4 border-gold rounded-r-xl p-5 mb-8 relative z-10">
+        <h4 class="text-xs text-gray-500 font-bold tracking-widest uppercase mb-2">Message</h4>
+        <p id="message" class="text-gray-300 font-medium leading-relaxed italic"></p>
+      </div>
+
+      <div id="claimForm" class="space-y-5 relative z-10">
+        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest text-center mb-6">Enter details to secure
+          your gold</h3>
+
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i data-lucide="user" class="w-5 h-5 text-gray-500 group-focus-within:text-gold transition-colors"></i>
+          </div>
+          <input type="text" id="claimerNameInput" placeholder="Your Full Name" required
+            class="w-full bg-dark/50 border border-dark-border rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all font-semibold">
+        </div>
+
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i data-lucide="mail" class="w-5 h-5 text-gray-500 group-focus-within:text-gold transition-colors"></i>
+          </div>
+          <input type="email" id="claimerEmailInput" placeholder="Your Email Address" required
+            class="w-full bg-dark/50 border border-dark-border rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all font-semibold">
+        </div>
+
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i data-lucide="phone" class="w-5 h-5 text-gray-500 group-focus-within:text-gold transition-colors"></i>
+          </div>
+          <input type="tel" id="claimerPhoneInput" placeholder="Your Phone Number (Optional)"
+            class="w-full bg-dark/50 border border-dark-border rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all font-semibold">
+        </div>
+
+        <button id="claimBtn" onclick="claimGold()"
+          class="w-full relative overflow-hidden bg-gradient-to-r from-gold to-gold-dark text-black py-5 mt-4 rounded-2xl font-extrabold hover:from-gold-light hover:to-gold transition-all shadow-[0_0_30px_rgba(255,215,0,0.2)] hover:shadow-[0_0_40px_rgba(255,215,0,0.4)] flex items-center justify-center gap-2 group/btn">
+          <div
+            class="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out">
+          </div>
+          <span class="relative z-10 tracking-wide text-lg uppercase">Claim Your Gold</span>
+          <i data-lucide="arrow-right"
+            class="w-5 h-5 relative z-10 group-hover/btn:translate-x-1 transition-transform"></i>
+        </button>
       </div>
     </div>
 
-    <div class="claim-card success-view" id="successSection">
-      <h1 style="font-size: 2rem; color: var(--gold-primary);">🎉 Success!</h1>
-      <p style="margin: 1rem 0;">Your gold has been claimed and saved to your G-Link vault.</p>
-      <p style="color: var(--gold-primary); font-weight: 600;" id="claimedGrams"></p>
-      <button id="dashboardBtn" class="btn-gold" style="margin-top: 1.5rem; display: inline-block; border-radius: 12px;">Go to Dashboard</button>
-      <a href="index.html" class="btn-outline-gold" style="margin-top: 0.5rem; display: inline-block; border-radius: 12px;">Back to Home</a>
+    <!-- Success Output -->
+    <div id="successSection"
+      class="hidden bg-dark-card border border-gold/40 rounded-[2.5rem] p-10 w-full max-w-lg shadow-[0_0_60px_rgba(255,215,0,0.15)] text-center relative overflow-hidden animate-fade-in-up">
+      <div
+        class="absolute inset-0 bg-gold/5 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.1)_0,transparent_100%)] pointer-events-none">
+      </div>
+
+      <div class="w-24 h-24 rounded-full bg-gold/20 flex items-center justify-center mx-auto mb-6 relative z-10">
+        <div class="absolute inset-0 rounded-full border border-gold/50 animate-ping opacity-20"></div>
+        <i data-lucide="check-circle-2" class="w-12 h-12 text-gold"></i>
+      </div>
+
+      <h3
+        class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-2 relative z-10 tracking-tight">
+        Success!</h3>
+      <p class="text-gray-400 font-medium mb-8 relative z-10">Your gold has been successfully minted and transferred to
+        your vault.</p>
+
+      <div class="bg-dark/80 backdrop-blur-sm border border-dark-border rounded-2xl p-6 mb-8 relative z-10">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-500 font-bold uppercase tracking-widest text-xs">Total Claimed</span>
+          <span id="finalClaimedGrams" class="text-gold font-extrabold text-2xl">0g</span>
+        </div>
+      </div>
+
+      <div class="space-y-3 relative z-10">
+        <button id="dashboardBtn"
+          class="inline-flex items-center justify-center w-full bg-gradient-to-r from-gold to-gold-dark text-black py-4 rounded-xl font-extrabold hover:from-gold-light hover:to-gold transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)] tracking-widest uppercase text-sm gap-2">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i> View Dashboard
+        </button>
+        <a href="index.html"
+          class="inline-flex items-center justify-center w-full bg-dark border border-dark-border text-white py-4 rounded-xl font-bold hover:text-gold hover:border-gold/30 transition-all tracking-widest uppercase text-sm gap-2">
+          <i data-lucide="home" class="w-4 h-4"></i> Back to Home
+        </a>
+      </div>
     </div>
+
   </main>
 
   <script>
-const slug = new URLSearchParams(window.location.search).get('id')
-if (!slug) {
-  document.body.innerHTML = '<div style="text-align:center;padding:50px;color:#fff"><h2>Invalid link!</h2></div>'
-}
+    lucide.createIcons();
 
-let linkData = null
+    const slug = new URLSearchParams(window.location.search).get('id');
+    let linkData = null;
 
-async function loadLink() {
-  try {
-    const res = await fetch('/api/links/' + slug)
-    const data = await res.json()
-    
-    if (data.success) {
-      linkData = data.link
-      document.getElementById('senderName').textContent = linkData.sender_name || 'Someone'
-      document.getElementById('goldGrams').textContent = linkData.gold_grams + 'g'
-      document.getElementById('amountINR').textContent = '₹' + linkData.amount_inr
-      document.getElementById('message').textContent = linkData.message || 'Enjoy your gold!'
-      
-      if (linkData.status === 'claimed') {
-        document.getElementById('linkInfo').innerHTML = `
-          <div style="text-align:center;padding:2rem">
-            <h1 style="color:#f44336;font-size:2rem;margin-bottom:1rem">⏰ Link Expired</h1>
-            <p style="color:#888;margin-bottom:2rem">This gold link has already been claimed and is no longer available.</p>
-            <div style="background:#1a3a1a;border:1px solid #4CAF50;border-radius:12px;padding:20px;margin:2rem 0">
-              <p style="color:#4CAF50;font-size:18px;margin-bottom:0.5rem">✅ Successfully Claimed</p>
-              <p style="color:#ccc">${linkData.gold_grams}g gold was claimed by ${linkData.claimer_name}</p>
-              <p style="color:#ccc;font-size:14px">${linkData.claimed_at ? new Date(linkData.claimed_at).toLocaleString() : ''}</p>
+    if (!slug) {
+      showError("Invalid link format. ID is missing.");
+    }
+
+    async function loadLink() {
+      try {
+        const res = await fetch('/api/links/' + slug);
+        const data = await res.json();
+
+        removeGlobalLoader();
+
+        if (data.success) {
+          linkData = data.link;
+
+          if (linkData.status === 'claimed') {
+            document.getElementById('alreadyClaimedInfo').classList.remove('hidden');
+            document.getElementById('claimedGoldAmount').textContent = `${linkData.gold_grams}g`;
+            document.getElementById('claimerName').textContent = linkData.claimer_name || 'Someone';
+            document.getElementById('claimedDate').textContent = linkData.claimed_at ? new Date(linkData.claimed_at).toLocaleString() : '';
+            showError("This gold link has already been claimed and is no longer available.");
+            return;
+          }
+
+          document.getElementById('senderName').textContent = linkData.sender_name || 'Someone special';
+          document.getElementById('goldGrams').textContent = '≈ ' + linkData.gold_grams + 'g of gold';
+          document.getElementById('amountINR').textContent = '₹' + Math.round(linkData.amount_inr || 0).toLocaleString();
+
+          if (linkData.message) {
+            document.getElementById('messageBox').classList.remove('hidden');
+            document.getElementById('message').textContent = linkData.message;
+          }
+
+          document.getElementById('claimCard').classList.remove('hidden');
+
+        } else {
+          showError("We couldn't find this link. It may have expired or been removed.");
+        }
+      } catch (e) {
+        removeGlobalLoader();
+        showError("Failed to connect to the server securely.");
+        console.error('Load link error:', e);
+      }
+    }
+
+    function removeGlobalLoader() {
+      const loader = document.getElementById('globalLoader');
+      if (loader) {
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        setTimeout(() => loader.remove(), 700);
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('errorTxt').textContent = msg;
+      document.getElementById('claimCard').classList.add('hidden');
+      document.getElementById('errorCard').classList.remove('hidden');
+    }
+
+    function showMsg(msg, type) {
+      const el = document.getElementById('msgBox')
+      el.textContent = msg
+      el.className = `p-4 flex items-center justify-center gap-2 rounded-xl mb-4 max-w-lg mx-auto text-center text-sm font-bold shadow-lg ${type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/30' :
+        type === 'error' || type === 'err' ? 'bg-red-500/10 text-red-500 border border-red-500/30' :
+          'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+        } animate-fade-in-up z-50`
+      el.classList.remove('hidden')
+
+      setTimeout(() => {
+        el.classList.add('hidden')
+      }, 5000)
+    }
+
+    function showClaimingLoader() {
+      const loader = document.createElement('div')
+      loader.id = 'claimingLoader'
+      loader.className = 'fixed inset-0 z-[250] bg-dark/95 backdrop-blur-3xl flex flex-col items-center justify-center transition-opacity duration-300 animate-fade-in-up'
+
+      loader.innerHTML = `
+          <div class="relative w-32 h-32 flex items-center justify-center mb-10">
+            <!-- Outer rings -->
+            <div class="absolute inset-0 border-4 border-dark-border rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-gold rounded-full border-t-transparent animate-spin" style="animation-duration: 1.5s;"></div>
+            <div class="absolute inset-2 border-4 border-gold/30 rounded-full border-b-transparent animate-spin" style="animation-duration: 2s; animation-direction: reverse;"></div>
+            <!-- Center Icon -->
+            <div class="bg-gold/10 w-20 h-20 rounded-full flex items-center justify-center">
+              <i data-lucide="sparkles" class="w-8 h-8 text-gold animate-pulse"></i>
             </div>
-            <a href="index.html" class="btn-gold" style="display:inline-block;padding:12px 24px;border-radius:12px;text-decoration:none;margin-top:1rem">Create Your Own Gold Link</a>
           </div>
+          
+          <h2 class="text-3xl font-extrabold text-white mb-4 tracking-tight">Minting Your Gold</h2>
+          
+          <!-- Progress Bar Container -->
+          <div class="w-64 max-w-sm h-2 bg-dark-border rounded-full overflow-hidden mb-4 shadow-[0_0_15px_rgba(255,215,0,0.1)]">
+            <div class="h-full bg-gradient-to-r from-gold to-gold-light rounded-full w-full animate-pulse relative overflow-hidden">
+               <div class="absolute inset-0 bg-white/20 w-1/2 -skew-x-12 animate-[translateX_1s_infinite]"></div>
+            </div>
+          </div>
+          
+          <p class="text-gold font-bold uppercase tracking-widest text-xs animate-pulse">Confirming with Solana Blockchain...</p>
+          <p class="text-gray-500 font-medium text-[10px] mt-2 max-w-xs text-center">Please wait while we secure your assets down to the cryptographic ledger.</p>
         `
-      }
-    } else {
-      document.getElementById('linkInfo').innerHTML = 
-        '<p style="color:#f44336;text-align:center">Link not found or expired!</p>'
+      document.body.appendChild(loader)
+      lucide.createIcons()
+      document.body.classList.add('overflow-hidden') // Prevent scrolling
     }
-  } catch(e) {
-    console.log('Load link error:', e)
-  }
-}
 
-async function claimGold() {
-  const name = document.getElementById('claimerName').value.trim()
-  const email = document.getElementById('claimerEmail').value.trim()
-  const phone = document.getElementById('claimerPhone').value.trim()
-  
-  if (!name || !email) {
-    showMsg('Please fill name and email', 'err')
-    return
-  }
-  
-  showMsg('Claiming gold on Solana...', 'info')
-  document.getElementById('claimBtn').disabled = true
-  
-  try {
-    const res = await fetch('/api/links/' + slug + '/claim', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ name, email, phone })
-    })
-    const data = await res.json()
-    
-    if (data.success) {
-      document.getElementById('claimForm').style.display = 'none'
-      document.getElementById('successSection').style.display = 'block'
-      document.getElementById('claimedGrams').textContent = data.goldGrams + 'g'
-      document.getElementById('dashboardBtn').onclick = () => {
-        window.location.href = `recipient-dashboard.html?email=${encodeURIComponent(email)}`
+    function removeClaimingLoader() {
+      const loader = document.getElementById('claimingLoader')
+      if (loader) {
+        loader.classList.add('opacity-0')
+        setTimeout(() => {
+          loader.remove()
+          document.body.classList.remove('overflow-hidden')
+        }, 300)
       }
-    } else {
-      showMsg(data.error || 'Claim failed', 'err')
-      document.getElementById('claimBtn').disabled = false
     }
-  } catch(e) {
-    showMsg('Error: ' + e.message, 'err')
-    document.getElementById('claimBtn').disabled = false
-  }
-}
 
-function showMsg(msg, type) {
-  const el = document.getElementById('msg')
-  if (el) {
-    el.textContent = msg
-    el.className = 'msg ' + type
-    el.style.display = 'block'
-  }
-}
+    async function claimGold() {
+      const name = document.getElementById('claimerNameInput').value.trim();
+      const email = document.getElementById('claimerEmailInput').value.trim();
+      const phone = document.getElementById('claimerPhoneInput').value.trim();
 
-loadLink()
+      if (!name || !email) {
+        showMsg("Name and email are strictly required.", 'err');
+        return;
+      }
+
+      document.getElementById('claimBtn').disabled = true;
+      showClaimingLoader();
+
+      try {
+        const res = await fetch('/api/links/' + slug + '/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone })
+        });
+        const data = await res.json();
+
+        removeClaimingLoader();
+
+        if (data.success) {
+          document.getElementById('claimCard').classList.add('hidden');
+          document.getElementById('successSection').classList.remove('hidden');
+          document.getElementById('finalClaimedGrams').textContent = data.goldGrams + 'g';
+
+          document.getElementById('dashboardBtn').onclick = () => {
+            window.location.href = `recipient-dashboard.html?email=${encodeURIComponent(email)}`;
+          };
+        } else {
+          showMsg(data.error || 'The smart contract declined the claim request.', 'err');
+          document.getElementById('claimBtn').disabled = false;
+        }
+      } catch (e) {
+        removeClaimingLoader();
+        showMsg('Network Error: ' + e.message, 'err');
+        document.getElementById('claimBtn').disabled = false;
+      }
+    }
+
+    if (slug) {
+      loadLink();
+    }
   </script>
 </body>
+
 </html>

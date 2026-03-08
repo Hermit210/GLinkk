@@ -1,406 +1,536 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>G-Link Blessing</title>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#0a0a0a; color:#fff; font-family:Arial,sans-serif; min-height:100vh; }
-    .header { background:#111; border-bottom:1px solid #D4AF37; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
-    .logo { color:#D4AF37; font-size:24px; font-weight:bold; }
-    .container { max-width:600px; margin:0 auto; padding:24px 16px; }
-    .card { background:#111; border:1px solid #333; border-radius:16px; padding:24px; margin-bottom:20px; }
-    .gold { color:#D4AF37; }
-    input, select, textarea { width:100%; padding:12px 16px; margin-top:8px; background:#1a1a1a; border:1px solid #333; border-radius:10px; color:#fff; font-size:15px; outline:none; }
-    input:focus, select:focus, textarea:focus { border-color:#D4AF37; }
-    select option { background:#1a1a1a; }
-    .btn { width:100%; padding:14px; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; margin-top:12px; }
-    .btn-gold { background:#D4AF37; color:#000; }
-    .btn-outline { background:transparent; color:#D4AF37; border:1px solid #D4AF37; }
-    .amount-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:12px 0; }
-    .amount-btn { padding:12px; background:#1a1a1a; border:1px solid #333; border-radius:10px; color:#fff; cursor:pointer; font-size:14px; font-weight:bold; text-align:center; transition:all 0.2s; }
-    .amount-btn.selected { background:#2a2000; border-color:#D4AF37; color:#D4AF37; }
-    .blessing-entry { background:#1a1a1a; border:1px solid #222; border-radius:12px; padding:16px; margin-bottom:10px; }
-    .badge { display:inline-block; background:#2a2000; color:#D4AF37; padding:4px 12px; border-radius:20px; font-size:12px; }
-    .share-row { display:flex; gap:10px; margin-top:12px; }
-    .share-btn { flex:1; padding:12px; border:none; border-radius:10px; font-size:14px; font-weight:bold; cursor:pointer; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; }
-    .success-box { background:#0a2000; border:2px solid #D4AF37; border-radius:16px; padding:24px; text-align:center; display:none; margin-bottom:20px; }
-    label { color:#888; font-size:14px; display:block; margin-top:12px; }
-    .powered { text-align:center; color:#444; font-size:11px; margin-top:24px; margin-bottom:40px; }
-  </style>
-</head>
-<body>
-
-<div class="header">
-  <span class="logo">🪙 G-Link</span>
-  <a href="/dashboard.html" style="color:#888;text-decoration:none;font-size:14px">Dashboard</a>
-</div>
-
-<div class="container">
-
-  <!-- CREATE SECTION -->
-  <div id="createSection">
-    <div class="card">
-      <h2 class="gold" style="margin-bottom:4px">Create Blessing Page</h2>
-      <p style="color:#888;font-size:14px;margin-bottom:16px">Create your personal gold blessing page and share it!</p>
-      
-      <label>Your Name *</label>
-      <input type="text" id="createName" placeholder="Enter your name">
-      
-      <label>Occasion *</label>
-      <select id="createOccasion">
-        <option value="">Select occasion</option>
-        <option value="Wedding">💍 Wedding</option>
-        <option value="Birthday">🎂 Birthday</option>
-        <option value="Anniversary">❤️ Anniversary</option>
-        <option value="Baby Shower">👶 Baby Shower</option>
-        <option value="Festival">🎉 Festival</option>
-        <option value="Graduation">🎓 Graduation</option>
-        <option value="Other">✨ Other</option>
-      </select>
-      
-      <label>Message for blessers</label>
-      <textarea id="createMessage" rows="3" placeholder="e.g. Bless me on my wedding day!"></textarea>
-      
-      <label>Your Email (for notifications)</label>
-      <input type="email" id="createEmail" placeholder="your@email.com">
-      
-      <button class="btn btn-gold" onclick="createBlessingPage()">🪙 Create My Blessing Page</button>
-    </div>
-    
-    <div id="createSuccess" class="success-box">
-      <h2 class="gold">🎉 Blessing Page Created!</h2>
-      <p style="color:#888;margin:8px 0 16px">Share this link with family and friends</p>
-      <div style="background:#111;border:1px solid #D4AF37;border-radius:10px;padding:12px;margin-bottom:12px">
-        <p id="createdLinkText" style="color:#D4AF37;word-break:break-all;font-size:14px"></p>
-      </div>
-      <div class="share-row">
-        <button class="share-btn" onclick="copyCreatedLink()" style="background:#333;color:#fff" id="copyCreatedBtn">📋 Copy Link</button>
-        <a id="whatsappCreatedBtn" href="#" target="_blank" class="share-btn" style="background:#25D366;color:#fff">📱 WhatsApp</a>
-      </div>
-      <button class="btn btn-outline" onclick="viewCreatedPage()" style="margin-top:12px">View My Blessing Page →</button>
-    </div>
-  </div>
-
-  <!-- BLESSING VIEW SECTION -->
-  <div id="blessingSection" style="display:none;">
-    
-    <div class="card" style="text-align:center">
-      <span class="badge" id="occasionBadge">Occasion</span>
-      <h1 class="gold" style="font-size:28px;margin:12px 0 4px" id="blessingName">Loading...</h1>
-      <p style="color:#888" id="blessingMessage">Loading...</p>
-      
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:20px">
-        <div>
-          <p class="gold" style="font-size:22px;font-weight:bold" id="totalGold">0g</p>
-          <p style="color:#666;font-size:12px">Gold Received</p>
-        </div>
-        <div>
-          <p class="gold" style="font-size:22px;font-weight:bold" id="totalInr">₹0</p>
-          <p style="color:#666;font-size:12px">Total Value</p>
-        </div>
-        <div>
-          <p class="gold" style="font-size:22px;font-weight:bold" id="blesserCount">0</p>
-          <p style="color:#666;font-size:12px">Blessers</p>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card">
-      <h3 class="gold" style="margin-bottom:16px">Share This Page</h3>
-      <div class="share-row">
-        <button class="share-btn" onclick="copyPageLink()" style="background:#333;color:#fff" id="copyBtn">📋 Copy Link</button>
-        <a id="whatsappBtn" href="#" target="_blank" class="share-btn" style="background:#25D366;color:#fff">📱 WhatsApp</a>
-      </div>
-    </div>
-    
-    <div class="card">
-      <h3 class="gold" style="margin-bottom:16px">Send Gold Blessing 🪙</h3>
-      
-      <p style="color:#888;font-size:13px">Select amount:</p>
-      <div class="amount-grid">
-        <div class="amount-btn" data-amount="100" onclick="selectAmount(this)">₹100</div>
-        <div class="amount-btn" data-amount="500" onclick="selectAmount(this)">₹500</div>
-        <div class="amount-btn" data-amount="1000" onclick="selectAmount(this)">₹1000</div>
-        <div class="amount-btn" data-amount="2100" onclick="selectAmount(this)">₹2100</div>
-        <div class="amount-btn" data-amount="5100" onclick="selectAmount(this)">₹5100</div>
-        <div class="amount-btn" data-amount="11000" onclick="selectAmount(this)">₹11000</div>
-      </div>
-      
-      <label>Custom Amount (₹)</label>
-      <input type="number" id="customAmount" placeholder="Enter custom amount" min="100" oninput="clearSelection()">
-      
-      <p id="goldPreview" style="color:#555;font-size:12px;margin-top:8px"></p>
-      
-      <label>Your Name *</label>
-      <input type="text" id="blesserNameInput" placeholder="Enter your name">
-      
-      <label>Blessing Message (optional)</label>
-      <textarea id="blesserMsgInput" rows="2" placeholder="Write a blessing message..."></textarea>
-      
-      <button class="btn btn-gold" id="sendBtn" onclick="initPayment()">💳 Pay & Send Blessing</button>
-    </div>
-    
-    <div id="successSection" class="success-box">
-      <h2 class="gold">🎉 Blessing Sent!</h2>
-      <p style="color:#888;margin:8px 0">You sent</p>
-      <p class="gold" style="font-size:36px;font-weight:bold" id="successGold">0g</p>
-      <p style="color:#888">of real gold on Solana blockchain!</p>
-      <p style="color:#555;font-size:13px;margin-top:8px">Total blessings: <span class="gold" id="successTotal">0g</span></p>
-    </div>
-    
-    <div class="card">
-      <h3 class="gold" style="margin-bottom:16px">Blessings Received ❤️</h3>
-      <div id="blessingsList"><p style="color:#666;text-align:center">Loading...</p></div>
-    </div>
-    
-  </div>
-
-  <p class="powered">Powered by G-Link | Oro GRAIL | Solana Blockchain</p>
-</div>
-
-<script>
-  // GET ID FROM URL - THIS IS THE KEY FIX
-  const urlParams = new URLSearchParams(window.location.search)
-  const blessingId = urlParams.get('id')
-  let liveGoldPrice = 7200
-  let blessingData = null
-  let createdPageLink = ''
-
-  // RUN IMMEDIATELY ON PAGE LOAD
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded')
-    console.log('URL:', window.location.href)
-    console.log('Blessing ID:', blessingId)
-    
-    if (blessingId && blessingId.length > 0) {
-      // SHOW BLESSING VIEW
-      console.log('Showing blessing page for ID:', blessingId)
-      document.getElementById('createSection').style.display = 'none'
-      document.getElementById('blessingSection').style.display = 'block'
-      loadBlessingPage()
-    } else {
-      // SHOW CREATE FORM
-      console.log('Showing create form')
-      document.getElementById('createSection').style.display = 'block'
-      document.getElementById('blessingSection').style.display = 'none'
-      // Pre-fill from logged in user
-      try {
-        const user = JSON.parse(localStorage.getItem('glink_user') || '{}')
-        if (user.name) document.getElementById('createName').value = user.name
-        if (user.email) document.getElementById('createEmail').value = user.email
-      } catch(e) {}
-    }
-  })
-
-  async function loadBlessingPage() {
-    try {
-      console.log('Fetching blessing:', blessingId)
-      const res = await fetch('/api/blessing/' + blessingId)
-      const data = await res.json()
-      console.log('Blessing data:', data)
-      
-      if (!data.success) {
-        document.getElementById('blessingSection').innerHTML = 
-          '<div style="text-align:center;padding:40px">' +
-          '<p style="color:#D4AF37;font-size:18px">Blessing page not found!</p>' +
-          '<a href="/blessing.html" style="color:#888;margin-top:12px;display:block">Create one →</a>' +
-          '</div>'
-        return
-      }
-      
-      blessingData = data.blessing
-      liveGoldPrice = data.livePrice || 7200
-      const entries = data.entries || []
-      
-      document.getElementById('blessingName').textContent = blessingData.name
-      document.getElementById('occasionBadge').textContent = blessingData.occasion
-      document.getElementById('blessingMessage').textContent = blessingData.message || 'Send gold blessings!'
-      document.getElementById('totalGold').textContent = blessingData.total_gold + 'g'
-      document.getElementById('totalInr').textContent = '₹' + Math.round(blessingData.total_inr)
-      document.getElementById('blesserCount').textContent = entries.length
-      document.title = 'Bless ' + blessingData.name + ' - G-Link'
-      
-      // Share buttons
-      const pageUrl = window.location.href
-      document.getElementById('whatsappBtn').href = 
-        'https://wa.me/?text=' + encodeURIComponent(
-          '🪙 Bless ' + blessingData.name + ' on their ' + blessingData.occasion + '!\n' +
-          'Send real gold here: ' + pageUrl
-        )
-      
-      // Entries list
-      const list = document.getElementById('blessingsList')
-      if (entries.length === 0) {
-        list.innerHTML = '<p style="color:#555;text-align:center;padding:20px">Be the first to bless! 🪙</p>'
-      } else {
-        list.innerHTML = entries.map(e => `
-          <div class="blessing-entry">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-weight:bold">${e.blesser_name}</span>
-              <span class="gold;font-weight:bold">${e.gold_grams}g Gold</span>
-            </div>
-            ${e.blesser_message ? `<p style="color:#888;font-style:italic;margin-top:6px">"${e.blesser_message}"</p>` : ''}
-            <p style="color:#555;font-size:12px;margin-top:4px">₹${e.amount_inr}</p>
-          </div>
-        `).join('')
-      }
-      
-    } catch(e) {
-      console.log('Load error:', e.message)
-    }
-  }
-
-  function selectAmount(btn) {
-    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'))
-    btn.classList.add('selected')
-    document.getElementById('customAmount').value = ''
-    updatePreview(parseInt(btn.dataset.amount))
-  }
-
-  function clearSelection() {
-    document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('selected'))
-    const val = document.getElementById('customAmount').value
-    if (val) updatePreview(parseInt(val))
-  }
-
-  function updatePreview(amount) {
-    if (!amount) return
-    const grams = (amount / liveGoldPrice).toFixed(4)
-    document.getElementById('goldPreview').textContent = '≈ ' + grams + 'g gold at ₹' + liveGoldPrice + '/gram'
-  }
-
-  function getAmount() {
-    const sel = document.querySelector('.amount-btn.selected')
-    if (sel) return parseInt(sel.dataset.amount)
-    const custom = document.getElementById('customAmount').value
-    return custom ? parseInt(custom) : 0
-  }
-
-  function copyPageLink() {
-    navigator.clipboard.writeText(window.location.href)
-    document.getElementById('copyBtn').textContent = '✅ Copied!'
-    setTimeout(() => document.getElementById('copyBtn').textContent = '📋 Copy Link', 2000)
-  }
-
-  async function initPayment() {
-    const amount = getAmount()
-    const name = document.getElementById('blesserNameInput').value.trim()
-    if (!amount || amount < 100) { alert('Minimum ₹100'); return }
-    if (!name) { alert('Please enter your name'); return }
-    
-    try {
-      const orderRes = await fetch('/api/payment/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount_inr: amount })
-      })
-      const orderData = await orderRes.json()
-      if (!orderData.success && !orderData.orderId) throw new Error(orderData.error || 'Order failed')
-      
-      var options = {
-        key: orderData.key,
-        amount: orderData.amount,
-        currency: 'INR',
-        name: 'G-Link Blessing',
-        description: 'Gold Blessing for ' + (blessingData?.name || ''),
-        order_id: orderData.orderId,
-        prefill: { name: name },
-        theme: { color: '#D4AF37' },
-        handler: async function(response) {
-          await sendBlessing(response.razorpay_payment_id, amount, name)
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Blessing - G-Link</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                    },
+                    colors: {
+                        gold: {
+                            DEFAULT: '#FFD700',
+                            light: '#FFED4E',
+                            dark: '#FFA500',
+                        },
+                        dark: {
+                            DEFAULT: '#0a0a0a',
+                            card: '#111111',
+                            border: '#222222'
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
         }
-      }
-      new Razorpay(options).open()
-    } catch(e) {
-      alert('Payment error: ' + e.message)
-    }
-  }
 
-  async function sendBlessing(paymentId, amount, name) {
-    const msg = document.getElementById('blesserMsgInput').value
-    const btn = document.getElementById('sendBtn')
-    btn.textContent = '⏳ Sending...'
-    btn.disabled = true
-    
-    try {
-      const res = await fetch('/api/blessing/' + blessingId + '/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ blesserName: name, blesserMessage: msg, amount, paymentId })
-      })
-      const data = await res.json()
-      
-      if (data.success) {
-        document.getElementById('successSection').style.display = 'block'
-        document.getElementById('successGold').textContent = data.goldGrams + 'g'
-        document.getElementById('successTotal').textContent = data.totalGold + 'g'
-        document.getElementById('successSection').scrollIntoView({ behavior: 'smooth' })
-        await loadBlessingPage()
-      } else {
-        alert('Error: ' + data.error)
-      }
-    } catch(e) {
-      alert('Error: ' + e.message)
-    } finally {
-      btn.textContent = '💳 Pay & Send Blessing'
-      btn.disabled = false
-    }
-  }
+        if (window.Razorpay) {
+            const originalRazorpay = window.Razorpay;
+            window.Razorpay = function (options) {
+                return new originalRazorpay(options);
+            };
+        }
+    </script>
+    <style>
+        .bg-site {
+            background-image: radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.08) 0%, transparent 60%);
+            background-attachment: fixed;
+        }
 
-  async function createBlessingPage() {
-    const name = document.getElementById('createName').value.trim()
-    const occasion = document.getElementById('createOccasion').value
-    const message = document.getElementById('createMessage').value.trim()
-    const email = document.getElementById('createEmail').value.trim()
-    
-    if (!name) { alert('Please enter your name'); return }
-    if (!occasion) { alert('Please select an occasion'); return }
-    
-    const btn = event.target
-    btn.textContent = 'Creating...'
-    btn.disabled = true
-    
-    try {
-      const res = await fetch('/api/blessing/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, occasion, message, email })
-      })
-      const data = await res.json()
-      
-      if (data.success) {
-        createdPageLink = data.link
-        document.getElementById('createdLinkText').textContent = data.link
-        document.getElementById('whatsappCreatedBtn').href = 
-          'https://wa.me/?text=' + encodeURIComponent(
-            '🪙 Bless ' + name + ' on their ' + occasion + '!\nSend real gold here: ' + data.link
-          )
-        document.getElementById('createSuccess').style.display = 'block'
-        document.getElementById('createSuccess').scrollIntoView({ behavior: 'smooth' })
-      } else {
-        alert('Error: ' + data.error)
-      }
-    } catch(e) {
-      alert('Error: ' + e.message)
-    } finally {
-      btn.textContent = '🪙 Create My Blessing Page'
-      btn.disabled = false
-    }
-  }
+        .glass-nav {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+        }
+    </style>
+</head>
 
-  function copyCreatedLink() {
-    navigator.clipboard.writeText(createdPageLink)
-    document.getElementById('copyCreatedBtn').textContent = '✅ Copied!'
-    setTimeout(() => document.getElementById('copyCreatedBtn').textContent = '📋 Copy Link', 2000)
-  }
+<body class="bg-dark text-white bg-site font-sans min-h-screen flex flex-col overflow-hidden">
 
-  function viewCreatedPage() {
-    window.open(createdPageLink, '_blank')
-  }
-</script>
+    <!-- Fullscreen Initial Loader -->
+    <div id="globalLoader"
+        class="fixed inset-0 z-[200] bg-dark/95 backdrop-blur-3xl flex flex-col items-center justify-center transition-opacity duration-700">
+        <div class="relative w-24 h-24 flex items-center justify-center mb-6">
+            <div class="absolute inset-0 border-4 border-dark-border rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-gold rounded-full border-t-transparent animate-spin"></div>
+            <i data-lucide="gift" class="w-8 h-8 text-gold animate-pulse-slow"></i>
+        </div>
+        <h2 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gold to-gold-light mb-2">
+            Accessing Registry...</h2>
+        <p class="text-gray-500 font-bold uppercase tracking-widest text-xs">Secure Connection</p>
+    </div>
 
+    <nav class="glass-nav sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-20 items-center">
+                <!-- Logo -->
+                <a href="/" class="text-xl font-bold tracking-tight text-white flex items-center gap-2 group mr-2">
+                    <span class="text-gold group-hover:rotate-12 transition-transform duration-300">🪙</span>
+                    <span class="hidden sm:inline">G-Link</span>
+                </a>
+
+                <!-- Right Action -->
+                <a href="/dashboard.html"
+                    class="flex items-center justify-center gap-2 px-5 py-2.5 bg-dark border border-dark-border text-gray-300 rounded-xl font-bold hover:text-gold hover:border-gold/30 transition-all text-xs tracking-widest uppercase relative overflow-hidden group">
+                    <div
+                        class="absolute inset-0 bg-gold/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+                    </div>
+                    <i data-lucide="layout-dashboard"
+                        class="w-4 h-4 relative z-10 group-hover:-translate-x-1 transition-transform"></i>
+                    <span class="relative z-10">Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="msgBox" class="hidden max-w-lg mx-auto mt-6"></div>
+
+    <!-- Form Container -->
+    <div class="flex-grow flex items-center justify-center px-4 py-12 relative z-10">
+
+        <!-- Error State (Hidden by default) -->
+        <div id="errorCard"
+            class="hidden bg-dark-card border border-red-500/30 rounded-[2rem] p-10 max-w-md w-full shadow-[0_0_50px_rgba(239,68,68,0.05)] text-center animate-fade-in-up">
+            <div
+                class="w-20 h-20 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="alert-triangle" class="w-10 h-10 text-red-500"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-white mb-3 tracking-tight">Registry Not Found</h2>
+            <p id="errorTxt" class="text-gray-400 font-medium mb-8 leading-relaxed">This blessing registry does not
+                exist or has been removed.</p>
+            <a href="/"
+                class="inline-flex items-center justify-center w-full bg-dark border border-dark-border text-gray-300 py-4 rounded-xl font-bold hover:text-gold hover:border-gold/30 transition-all uppercase text-sm tracking-widest gap-2">
+                <i data-lucide="home" class="w-5 h-5"></i> Return Home
+            </a>
+        </div>
+
+        <div id="formCard"
+            class="hidden bg-dark-card border border-dark-border rounded-[2.5rem] p-8 sm:p-12 w-full max-w-xl shadow-[0_0_50px_rgba(255,215,0,0.03)] relative overflow-hidden group">
+            <div
+                class="absolute -top-40 -right-40 w-80 h-80 bg-gold/5 blur-[100px] rounded-full pointer-events-none group-hover:bg-gold/10 transition-colors duration-700">
+            </div>
+
+            <div class="text-center relative z-10 mb-8 pt-4">
+                <div
+                    class="w-20 h-20 rounded-3xl bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(255,215,0,0.1)]">
+                    <i data-lucide="sparkles" class="w-10 h-10 text-gold"></i>
+                </div>
+                <h1 id="blessingTitle" class="text-4xl font-extrabold text-white mb-2 tracking-tight">Send Blessing</h1>
+                <p id="blessingOccasion" class="text-gold font-bold uppercase tracking-widest text-sm mb-4">Special
+                    Occasion</p>
+                <p id="blessingMessage" class="text-gray-400 font-medium leading-relaxed max-w-sm mx-auto">Please
+                    wait...</p>
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-4 mb-8 relative z-10">
+                <div class="bg-dark/50 border border-dark-border rounded-2xl p-4 text-center">
+                    <div id="goldReceived" class="text-gold font-extrabold text-xl mb-1">0.000g</div>
+                    <div class="text-gray-500 text-[10px] uppercase tracking-widest font-bold">Gold Received</div>
+                </div>
+                <div class="bg-dark/50 border border-dark-border rounded-2xl p-4 text-center">
+                    <div id="valueReceived" class="text-white font-extrabold text-xl mb-1">₹0</div>
+                    <div class="text-gray-500 text-[10px] uppercase tracking-widest font-bold">Total Value</div>
+                </div>
+            </div>
+
+            <form id="blessingForm" class="space-y-6 relative z-10">
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 ps-1">Select
+                        Amount (₹)</label>
+                    <div class="grid grid-cols-3 gap-3 mb-3">
+                        <button type="button"
+                            class="amount-btn bg-dark border border-dark-border py-3 rounded-xl font-bold text-gray-300 hover:border-gold hover:text-gold transition-all"
+                            data-amount="500">₹500</button>
+                        <button type="button"
+                            class="amount-btn bg-dark border border-dark-border py-3 rounded-xl font-bold text-gray-300 hover:border-gold hover:text-gold transition-all"
+                            data-amount="1100">₹1,100</button>
+                        <button type="button"
+                            class="amount-btn bg-dark border border-dark-border py-3 rounded-xl font-bold text-gray-300 hover:border-gold hover:text-gold transition-all"
+                            data-amount="2100">₹2,100</button>
+                    </div>
+                    <div class="relative group input-wrapper">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                            <span class="text-gray-500 font-bold">₹</span>
+                        </div>
+                        <input type="number" id="customAmount" placeholder="Or enter custom amount"
+                            class="w-full bg-dark/50 border border-dark-border rounded-xl py-4 pl-10 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all font-semibold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="relative group">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ps-1">Your
+                            Name</label>
+                        <div class="absolute inset-y-0 left-0 top-[26px] pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="user"
+                                class="w-5 h-5 text-gray-500 group-focus-within:text-gold transition-colors"></i>
+                        </div>
+                        <input type="text" id="blesserName" required
+                            class="w-full bg-dark/50 border border-dark-border rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all font-semibold"
+                            placeholder="John Doe">
+                    </div>
+
+                    <div class="relative group">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ps-1">Your
+                            Email</label>
+                        <div class="absolute inset-y-0 left-0 top-[26px] pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="mail"
+                                class="w-5 h-5 text-gray-500 group-focus-within:text-gold transition-colors"></i>
+                        </div>
+                        <input type="email" id="blesserEmail" required
+                            class="w-full bg-dark/50 border border-dark-border rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all font-semibold"
+                            placeholder="john@example.com">
+                    </div>
+                </div>
+
+                <div class="relative group">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 ps-1">Blessing
+                        Message</label>
+                    <div class="absolute top-10 left-0 pl-4 flex items-start pointer-events-none">
+                        <i data-lucide="message-square"
+                            class="w-5 h-5 text-gray-500 group-focus-within:text-gold transition-colors"></i>
+                    </div>
+                    <textarea id="blesserMessage" rows="3" required
+                        class="w-full bg-dark/50 border border-dark-border rounded-xl py-4 pl-12 pr-4 text-white placeholder-gray-600 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/50 transition-all font-semibold resize-none"
+                        placeholder="Wishing you a lifetime of happiness..."></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full relative group overflow-hidden bg-gradient-to-r from-gold to-gold-dark text-black py-5 rounded-2xl font-extrabold hover:from-gold-light hover:to-gold transition-all shadow-[0_0_30px_rgba(255,215,0,0.2)] hover:shadow-[0_0_40px_rgba(255,215,0,0.4)] flex items-center justify-center gap-3">
+                    <div
+                        class="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+                    </div>
+                    <i data-lucide="gift" class="w-5 h-5 relative z-10"></i>
+                    <span class="relative z-10 tracking-wide text-lg">Send Gold Blessing</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Output -->
+        <div id="successCard"
+            class="hidden bg-dark-card border border-gold/40 rounded-[2.5rem] p-10 w-full max-w-lg shadow-[0_0_60px_rgba(255,215,0,0.15)] text-center relative overflow-hidden animate-fade-in-up">
+            <div
+                class="absolute inset-0 bg-gold/5 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.1)_0,transparent_100%)] pointer-events-none">
+            </div>
+
+            <div class="w-24 h-24 rounded-full bg-gold/20 flex items-center justify-center mx-auto mb-6 relative z-10">
+                <div class="absolute inset-0 rounded-full border border-gold/50 animate-ping opacity-20"></div>
+                <i data-lucide="check-circle-2" class="w-12 h-12 text-gold"></i>
+            </div>
+
+            <h3
+                class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 mb-2 relative z-10 tracking-tight">
+                Blessing Sent!</h3>
+            <p class="text-gray-400 font-medium mb-8 relative z-10">Your gold has been successfully vaulted in their
+                registry.</p>
+
+            <div class="bg-dark/80 backdrop-blur-sm border border-dark-border rounded-2xl p-6 mb-8 relative z-10">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-500 font-bold uppercase tracking-widest text-xs">Transaction ID</span>
+                    <span id="txId" class="text-white font-mono text-sm bg-dark px-2 py-1 rounded">#---</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 font-bold uppercase tracking-widest text-xs">Gold Sent</span>
+                    <span id="txGold" class="text-gold font-extrabold text-lg">0g</span>
+                </div>
+            </div>
+
+            <a href="/"
+                class="inline-flex items-center justify-center w-full bg-dark border border-dark-border text-white py-4 rounded-xl font-bold hover:text-gold hover:border-gold/30 transition-all tracking-widest uppercase text-sm relative z-10 gap-2">
+                <i data-lucide="home" class="w-4 h-4"></i> Create Your Own
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const blessingId = urlParams.get('id');
+        let pricePerGram = 7200;
+
+        // Amount selection logic
+        const customAmountInput = document.getElementById('customAmount');
+        const amountBtns = document.querySelectorAll('.amount-btn');
+
+        amountBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Deselect all
+                amountBtns.forEach(b => b.classList.remove('border-gold', 'text-gold'));
+                amountBtns.forEach(b => b.classList.add('border-dark-border', 'text-gray-300'));
+
+                // Select clicked
+                e.target.classList.remove('border-dark-border', 'text-gray-300');
+                e.target.classList.add('border-gold', 'text-gold');
+
+                // Fill input
+                customAmountInput.value = e.target.getAttribute('data-amount');
+            });
+        });
+
+        customAmountInput.addEventListener('input', () => {
+            amountBtns.forEach(b => b.classList.remove('border-gold', 'text-gold'));
+            amountBtns.forEach(b => b.classList.add('border-dark-border', 'text-gray-300'));
+        });
+
+        async function loadBlessing() {
+            if (!blessingId) {
+                showError("Invalid link format. ID is missing.");
+                return;
+            }
+
+            try {
+                const [blessingRes, priceRes] = await Promise.all([
+                    fetch(`/api/blessing/${blessingId}`),
+                    fetch('/api/gold/price').catch(() => ({ json: () => ({ price_inr_per_gram: 7200 }) }))
+                ]);
+
+                const priceData = await priceRes.json();
+                pricePerGram = priceData.price_inr_per_gram || 7200;
+
+                const data = await blessingRes.json();
+
+                if (!data.success) {
+                    showError("The blessing registry you're looking for doesn't exist or may have been removed.");
+                    return;
+                }
+
+                const b = data.blessing;
+                document.getElementById('blessingTitle').textContent = `Bless ${b.name}`;
+                document.getElementById('blessingOccasion').textContent = b.occasion;
+                document.getElementById('blessingMessage').textContent = b.message || 'Send a thoughtful gold blessing for their special occasion.';
+
+                document.getElementById('goldReceived').textContent = `${parseFloat(b.total_gold || 0).toFixed(3)}g`;
+                document.getElementById('valueReceived').textContent = `₹${Math.round(b.total_inr || 0).toLocaleString()}`;
+
+                // Hide loader & show form
+                removeLoader();
+                document.getElementById('formCard').classList.remove('hidden');
+
+            } catch (error) {
+                showError("Failed to load connection securely. Please try again later.");
+            }
+        }
+
+        function removeLoader() {
+            const loader = document.getElementById('globalLoader');
+            if (loader) {
+                loader.classList.add('opacity-0', 'pointer-events-none');
+                document.body.classList.remove('overflow-hidden');
+                setTimeout(() => loader.remove(), 700);
+            }
+        }
+
+        function showError(msg) {
+            removeLoader();
+            document.getElementById('errorTxt').textContent = msg;
+            document.getElementById('formCard').classList.add('hidden');
+            document.getElementById('errorCard').classList.remove('hidden');
+        }
+
+        // Form submission
+        document.getElementById('blessingForm').addEventListener('submit', async (e) => {
+            e.preventDefault()
+
+            const senderName = document.getElementById('blesserName').value.trim()
+            const senderEmail = document.getElementById('blesserEmail').value.trim()
+            const message = document.getElementById('blesserMessage').value.trim()
+            const amount = parseFloat(customAmountInput.value) || 0
+
+            if (!senderName || !senderEmail || !amount) {
+                showMsg('Please fill all required fields and select an amount', 'error')
+                return
+            }
+
+            if (amount < 100) {
+                showMsg('Minimum blessing amount is ₹100', 'error')
+                return
+            }
+
+            await showPaymentModal(amount, senderName, senderEmail, message)
+        })
+
+        async function showPaymentModal(amount, senderName, senderEmail, message) {
+            const goldGrams = (amount / pricePerGram).toFixed(4)
+            const recipientName = document.getElementById('blessingTitle').textContent.replace('Bless ', '')
+
+            const modal = document.createElement('div')
+            modal.id = 'paymentModal'
+            modal.className = 'fixed inset-0 z-[150] bg-dark/80 backdrop-blur-2xl flex items-center justify-center p-4 animate-fade-in-up'
+
+            modal.innerHTML = `
+        <div class="bg-dark-card border border-gold/30 rounded-[2rem] p-8 w-full max-w-md shadow-[0_0_50px_rgba(255,215,0,0.1)] relative overflow-hidden group">
+          <div class="absolute -top-32 -left-32 w-64 h-64 bg-gold/10 blur-[80px] rounded-full pointer-events-none"></div>
+          
+          <div class="text-center relative z-10 mb-6">
+            <div class="w-16 h-16 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-4">
+              <i data-lucide="lock" class="w-7 h-7 text-gold"></i>
+            </div>
+            <h3 class="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 mb-1">Confirm Blessing</h3>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Verify Secure Payment Details</p>
+          </div>
+          
+          <div class="bg-dark/50 border border-dark-border rounded-xl p-5 mb-6 relative z-10 space-y-3">
+            <div class="flex justify-between items-center py-2 border-b border-dark-border/50">
+              <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Amount</span>
+              <span class="text-lg font-extrabold text-white tabular-nums">₹${amount.toLocaleString()}</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-dark-border/50">
+              <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Gold Value</span>
+              <span class="text-lg font-extrabold text-gold tabular-nums">${goldGrams}g</span>
+            </div>
+            <div class="flex justify-between items-center py-2 border-b border-dark-border/50">
+              <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">From</span>
+              <span class="text-sm font-bold text-gray-300 truncate max-w-[150px] text-right">${senderName}</span>
+            </div>
+            <div class="flex justify-between items-center py-2">
+              <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">To</span>
+              <span class="text-sm font-bold text-gray-300 truncate max-w-[150px] text-right">${recipientName}</span>
+            </div>
+          </div>
+          
+          <div class="space-y-3 relative z-10">
+            <button onclick="processPayment(${amount},'${senderName}','${senderEmail}','${message}')"
+              class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-4 rounded-xl font-extrabold hover:from-blue-500 hover:to-blue-400 transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] flex items-center justify-center gap-2 group-hover:-translate-y-0.5">
+              <i data-lucide="credit-card" class="w-4 h-4"></i> Pay Securely
+            </button>
+            <button onclick="closePaymentModal()"
+              class="w-full bg-dark border border-dark-border text-gray-400 py-3 rounded-xl font-bold hover:text-white hover:border-gray-500 transition-colors uppercase text-xs tracking-widest">
+              Cancel Check
+            </button>
+          </div>
+        </div>
+      `
+            document.body.appendChild(modal)
+            lucide.createIcons()
+        }
+
+        async function processPayment(amount, senderName, senderEmail, message) {
+            closePaymentModal()
+
+            try {
+                const orderRes = await fetch('/api/payment/create-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount_inr: amount })
+                })
+                const order = await orderRes.json()
+
+                if (!order.success) {
+                    showMsg('Payment error: ' + order.error, 'error')
+                    return
+                }
+
+                if (order.testMode) {
+                    await finalizeBlessing(amount, senderName, senderEmail, message, 'test_' + Date.now())
+                    return
+                }
+
+                const options = {
+                    key: order.key,
+                    amount: order.amount,
+                    currency: 'INR',
+                    name: 'G-Link Gold Blessing',
+                    description: `To: ${document.getElementById('blessingTitle').textContent.replace('Bless ', '')}`,
+                    order_id: order.orderId,
+                    handler: async function (response) {
+                        await finalizeBlessing(amount, senderName, senderEmail, message, response.razorpay_payment_id)
+                    },
+                    prefill: { name: senderName, email: senderEmail },
+                    theme: { color: '#D4AF37' },
+                    modal: {
+                        ondismiss: function () {
+                            showMsg('Payment cancelled', 'info')
+                        }
+                    }
+                }
+                new window.Razorpay(options).open()
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error')
+            }
+        }
+
+        async function finalizeBlessing(amount, blesserName, blesserEmail, blesserMessage, paymentId) {
+            try {
+                const res = await fetch(`/api/blessing/${blessingId}/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        blesserName,
+                        blesserMessage,
+                        amount,
+                        paymentId,
+                        blesserEmail
+                    })
+                })
+                const data = await res.json()
+                if (data.success) {
+                    showSuccess(paymentId, amount)
+                } else {
+                    showMsg(data.error || 'Failed to send blessing', 'error')
+                }
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error')
+            }
+        }
+
+        function showSuccess(txId, amount) {
+            const goldGrams = (amount / pricePerGram).toFixed(4);
+
+            document.getElementById('formCard').style.display = 'none'
+            document.getElementById('successCard').style.display = 'block'
+
+            document.getElementById('txId').textContent = '#' + txId.substring(0, 8).toUpperCase()
+            document.getElementById('txGold').textContent = goldGrams + 'g'
+
+            lucide.createIcons()
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal')?.remove()
+        }
+
+        function showMsg(msg, type) {
+            const el = document.getElementById('msgBox')
+            el.textContent = msg
+            el.className = `p-4 rounded-xl mb-4 max-w-lg mx-auto text-center text-sm font-bold shadow-lg ${type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/30' :
+                type === 'error' ? 'bg-red-500/10 text-red-500 border border-red-500/30' :
+                    'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                }`
+            el.classList.remove('hidden')
+
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                el.classList.add('hidden')
+            }, 5000)
+        }
+
+        // Initialize the page logic
+        loadBlessing()
+    </script>
 </body>
+
 </html>
