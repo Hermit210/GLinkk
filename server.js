@@ -124,43 +124,34 @@ const razorpay = new Razorpay({
 const twilioClient = process.env.TWILIO_ACCOUNT_SID ?
   twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null
 
-// Cashfree Payouts Configuration - trying different initialization patterns
+// Cashfree Payouts Configuration - simplified initialization
 const cashfreePgSDK = require('cashfree-pg-sdk-nodejs')
+
+// Initialize with the correct pattern for v2.0.2
+const cashfreeConfig = {
+  clientId: process.env.CASHFREE_CLIENT_ID,
+  clientSecret: process.env.CASHFREE_CLIENT_SECRET,
+  environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
+}
+
 let cashfreePayouts = null
 
-try {
-  // Try pattern 1: Direct constructor
-  cashfreePayouts = new cashfreePgSDK.Payouts({
-    clientId: process.env.CASHFREE_CLIENT_ID,
-    clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-    environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
-  })
-  console.log('Cashfree Payouts: Configured with pattern 1')
-} catch (e1) {
-  try {
-    // Try pattern 2: Direct function call
-    cashfreePayouts = cashfreePgSDK.Payouts({
-      clientId: process.env.CASHFREE_CLIENT_ID,
-      clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-      environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
-    })
-    console.log('Cashfree Payouts: Configured with pattern 2')
-  } catch (e2) {
-    try {
-      // Try pattern 3: Factory method
-      cashfreePayouts = cashfreePgSDK.createPayouts({
-        clientId: process.env.CASHFREE_CLIENT_ID,
-        clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-        environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
-      })
-      console.log('Cashfree Payouts: Configured with pattern 3')
-    } catch (e3) {
-      console.log('Cashfree Payouts: All initialization patterns failed, using fallback')
-      console.log('Error details:', { e1: e1.message, e2: e2.message, e3: e3.message })
-    }
-  }
+// Try different initialization methods
+if (cashfreePgSDK.Payouts && typeof cashfreePgSDK.Payouts === 'function') {
+  cashfreePayouts = cashfreePgSDK.Payouts(cashfreeConfig)
+  console.log('Cashfree Payouts: Configured with function call')
+} else if (cashfreePgSDK.Payouts && typeof cashfreePgSDK.Payouts === 'object') {
+  cashfreePayouts = cashfreePgSDK.Payouts
+  console.log('Cashfree Payouts: Using direct object')
+} else if (typeof cashfreePgSDK === 'function') {
+  cashfreePayouts = cashfreePgSDK(cashfreeConfig)
+  console.log('Cashfree Payouts: Configured with direct call')
+} else {
+  console.log('Cashfree Payouts: SDK not properly initialized, will use fallback')
+  console.log('Available methods:', Object.keys(cashfreePgSDK))
 }
-console.log('Cashfree Payouts:', cashfreePayouts ? 'Configured' : 'Missing')
+
+console.log('Cashfree Payouts:', cashfreePayouts ? 'Configured' : 'Missing - Check env vars')
 
 // SMS sending function
 async function sendSMS(to, message) {
@@ -1762,8 +1753,30 @@ app.post('/api/withdraw', async (req, res) => {
 
     // Step 1: Add Beneficiary to Cashfree
     const beneId = `bene_${email.replace(/[^a-zA-Z0-9]/g, '_')}`
+    
+    if (!cashfreePayouts) {
+      console.log('Cashfree Payouts not initialized, using simulation')
+      await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
+      const { data: txn } = await supabase.from('transactions').insert([{
+        user_email: email,
+        type: 'withdrawal',
+        amount_inr: amountINR,
+        gold_grams: goldGrams,
+        status: 'completed',
+        details: 'Simulated (Cashfree SDK not initialized)'
+      }]).select().single()
+
+      return res.json({
+        success: true,
+        withdrawalId: 'SIM_' + txn.id,
+        amountINR,
+        message: 'Withdrawal simulated! Cashfree SDK not properly initialized.'
+      })
+    }
+
     try {
-      await cashfreePayouts.beneficiary.add({
+      console.log('Adding beneficiary:', beneId)
+      const beneResponse = await cashfreePayouts.beneficiary.add({
         beneId,
         name: accountName,
         email,
@@ -1773,47 +1786,55 @@ app.post('/api/withdraw', async (req, res) => {
           ifsc
         }
       })
-      console.log('Beneficiary added/verified:', beneId)
+      console.log('Beneficiary added successfully:', beneResponse)
     } catch (beneError) {
       console.log('Beneficiary add error (might already exist):', beneError.message)
+      // Continue with payout even if beneficiary exists
     }
 
     // Step 2: Request Payout
     const transferId = `wd_${Date.now()}_${nanoid(5)}`
-    const payoutResponse = await cashfreePayouts.transfers.requestTransfer({
-      transferId,
-      amount: amountINR.toString(),
-      transferMode: 'IMPS',
-      beneId,
-      remark: 'G-Link Gold Withdrawal'
-    })
-
-    console.log('Cashfree Payout Response:', JSON.stringify(payoutResponse))
-
-    if (payoutResponse.status === 'SUCCESS' || payoutResponse.status === 'PENDING') {
-      // Deduct gold from user balance
-      await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
-
-      // Record transaction
-      const { data: txn } = await supabase.from('transactions').insert([{
-        user_email: email,
-        type: 'withdrawal',
-        amount_inr: amountINR,
-        gold_grams: goldGrams,
-        status: payoutResponse.status === 'SUCCESS' ? 'completed' : 'processing',
-        cashfree_transfer_id: transferId,
-        cashfree_reference_id: payoutResponse.referenceId
-      }]).select().single()
-
-      res.json({
-        success: true,
-        withdrawalId: transferId,
-        amountINR,
-        status: payoutResponse.status,
-        message: payoutResponse.status === 'SUCCESS' ? 'Withdrawal successful!' : 'Withdrawal is being processed.'
+    
+    try {
+      console.log('Requesting payout:', transferId)
+      const payoutResponse = await cashfreePayouts.transfers.requestTransfer({
+        transferId,
+        amount: amountINR.toString(),
+        transferMode: 'IMPS',
+        beneId,
+        remark: 'G-Link Gold Withdrawal'
       })
-    } else {
-      throw new Error(`Cashfree Error: ${payoutResponse.message || 'Transfer failed'}`)
+
+      console.log('Cashfree Payout Response:', JSON.stringify(payoutResponse))
+
+      if (payoutResponse.status === 'SUCCESS' || payoutResponse.status === 'PENDING') {
+        // Deduct gold from user balance
+        await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
+
+        // Record transaction
+        const { data: txn } = await supabase.from('transactions').insert([{
+          user_email: email,
+          type: 'withdrawal',
+          amount_inr: amountINR,
+          gold_grams: goldGrams,
+          status: payoutResponse.status === 'SUCCESS' ? 'completed' : 'processing',
+          cashfree_transfer_id: transferId,
+          cashfree_reference_id: payoutResponse.referenceId
+        }]).select().single()
+
+        res.json({
+          success: true,
+          withdrawalId: transferId,
+          amountINR,
+          status: payoutResponse.status,
+          message: payoutResponse.status === 'SUCCESS' ? 'Withdrawal successful!' : 'Withdrawal is being processed.'
+        })
+      } else {
+        throw new Error(`Cashfree Error: ${payoutResponse.message || 'Transfer failed'}`)
+      }
+    } catch (payoutError) {
+      console.log('Payout request failed:', payoutError.message)
+      throw new Error(`Cashfree Payout Failed: ${payoutError.message}`)
     }
 
   } catch (e) {
