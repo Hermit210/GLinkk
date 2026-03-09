@@ -124,35 +124,6 @@ const razorpay = new Razorpay({
 const twilioClient = process.env.TWILIO_ACCOUNT_SID ?
   twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null
 
-// Cashfree Payouts Configuration - simplified initialization
-const cashfreePgSDK = require('cashfree-pg-sdk-nodejs')
-
-// Initialize with the correct pattern for v2.0.2
-const cashfreeConfig = {
-  clientId: process.env.CASHFREE_CLIENT_ID,
-  clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-  environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
-}
-
-let cashfreePayouts = null
-
-// Try different initialization methods
-if (cashfreePgSDK.Payouts && typeof cashfreePgSDK.Payouts === 'function') {
-  cashfreePayouts = cashfreePgSDK.Payouts(cashfreeConfig)
-  console.log('Cashfree Payouts: Configured with function call')
-} else if (cashfreePgSDK.Payouts && typeof cashfreePgSDK.Payouts === 'object') {
-  cashfreePayouts = cashfreePgSDK.Payouts
-  console.log('Cashfree Payouts: Using direct object')
-} else if (typeof cashfreePgSDK === 'function') {
-  cashfreePayouts = cashfreePgSDK(cashfreeConfig)
-  console.log('Cashfree Payouts: Configured with direct call')
-} else {
-  console.log('Cashfree Payouts: SDK not properly initialized, will use fallback')
-  console.log('Available methods:', Object.keys(cashfreePgSDK))
-}
-
-console.log('Cashfree Payouts:', cashfreePayouts ? 'Configured' : 'Missing - Check env vars')
-
 // SMS sending function
 async function sendSMS(to, message) {
   if (!twilioClient || !process.env.TWILIO_PHONE_NUMBER) {
@@ -499,7 +470,7 @@ async function createGrailUser(email, phone) {
 
 let cachedGoldPrice = null;
 let lastGoldFetch = 0;
-const GOLD_CACHE_TTL = 60000; // 1 minute
+const GOLD_CACHE_TTL = 60000; // 1 minute cache
 
 async function getGoldPrice() {
   const now = Date.now();
@@ -508,16 +479,22 @@ async function getGoldPrice() {
   }
 
   try {
-    const r = await grail.get('/api/trading/gold/price');
-    const usd = parseFloat(r.data.data.price);
-    const inr = (usd * 84) / 31.1035;
-
-    cachedGoldPrice = inr;
+    console.log('Fetching fresh gold price from GRAIL...');
+    const response = await grail.get('/api/trading/gold/price');
+    const pricePerOunce = parseFloat(response.data?.data?.price || 5109);
+    const inrPerGram = (pricePerOunce / 31.1035) * 84;
+    
+    cachedGoldPrice = inrPerGram;
     lastGoldFetch = now;
-    return inr;
-  } catch (e) {
-    if (cachedGoldPrice !== null) return cachedGoldPrice;
-    return 7200;
+    console.log('Fresh gold price fetched:', inrPerGram);
+    return inrPerGram;
+  } catch (error) {
+    console.log('GRAIL API error, using fallback price:', error.message);
+    // Return cached price or fallback
+    if (cachedGoldPrice !== null) {
+      return cachedGoldPrice;
+    }
+    return 7200; // Fallback price
   }
 }
 
@@ -828,6 +805,41 @@ app.get('/api/dashboard', async (req, res) => {
       .order('created_at', { ascending: false })
       .limit(10)
 
+    // Also get withdrawals to show in transactions
+    console.log('Fetching withdrawals for email:', email)
+    console.log('Email type:', typeof email)
+    console.log('Email length:', email?.length)
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('email', email)
+      .order('created_at', { ascending: false })
+      .limit(10)
+    
+    console.log('Withdrawals query result:', { withdrawals: withdrawals?.length || 0, error: withdrawalsError?.message })
+    console.log('First withdrawal (if any):', withdrawals?.[0])
+
+    // Combine transactions and withdrawals
+    const allTransactions = [
+      ...(txns || []).map(txn => ({
+        ...txn,
+        type: txn.type || 'payment',
+        amount_inr: txn.amount_inr || 0,
+        gold_grams: txn.gold_grams || 0,
+        status: txn.status || 'completed',
+        created_at: txn.created_at
+      })),
+      ...(withdrawals || []).map(wd => ({
+        ...wd,
+        type: 'withdrawal',
+        amount_inr: wd.amount_inr || 0,
+        gold_grams: wd.gold_grams || 0,
+        status: wd.status || 'pending',
+        created_at: wd.created_at,
+        user_email: wd.email
+      }))
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10)
+
     const inrPerGram = await getGoldPrice()
     const goldGrams = parseFloat(user.gold_grams || 0)
 
@@ -839,7 +851,7 @@ app.get('/api/dashboard', async (req, res) => {
       goldValueINR: Math.round(goldGrams * inrPerGram),
       livePrice: Math.round(inrPerGram),
       linksCreated: links?.length || 0,
-      transactions: txns || [],
+      transactions: allTransactions || [],
       grailUserId: user.grail_user_id,
       walletAddress: user.wallet_address
     })
@@ -1718,128 +1730,149 @@ app.post('/api/groups/:groupId/share-gold', async (req, res) => {
 
 app.post('/api/withdraw', async (req, res) => {
   try {
-    const { email, goldGrams, bankAccount, ifsc, accountName, phone } = req.body
-    const { data: user } = await supabase.from('users').select('*').eq('email', email).single()
-    if (!user) throw new Error('User not found')
-    if ((user.gold_grams || 0) < goldGrams) throw new Error('Insufficient balance')
-
-    const inrPerGram = await getGoldPrice()
-    const amountINR = Math.round(goldGrams * inrPerGram)
-
-    console.log('--- Cashfree Withdrawal Initiation ---')
-    console.log('User:', email)
-    console.log('Amount INR:', amountINR)
-    console.log('Bank Details:', { bankAccount, ifsc, accountName })
-
-    if (!process.env.CASHFREE_CLIENT_ID) {
-      console.log('Cashfree not configured, using simulated withdrawal')
-      await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
-      const { data: txn } = await supabase.from('transactions').insert([{
-        user_email: email,
-        type: 'withdrawal',
-        amount_inr: amountINR,
-        gold_grams: goldGrams,
-        status: 'completed',
-        details: 'Simulated (Cashfree not configured)'
-      }]).select().single()
-
-      return res.json({
-        success: true,
-        withdrawalId: 'SIM_' + txn.id,
-        amountINR,
-        message: 'Withdrawal simulated! Cashfree API keys missing.'
-      })
-    }
-
-    // Step 1: Add Beneficiary to Cashfree
-    const beneId = `bene_${email.replace(/[^a-zA-Z0-9]/g, '_')}`
+    console.log('Withdraw body:', JSON.stringify(req.body))
     
-    if (!cashfreePayouts) {
-      console.log('Cashfree Payouts not initialized, using simulation')
-      await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
-      const { data: txn } = await supabase.from('transactions').insert([{
-        user_email: email,
-        type: 'withdrawal',
-        amount_inr: amountINR,
-        gold_grams: goldGrams,
-        status: 'completed',
-        details: 'Simulated (Cashfree SDK not initialized)'
-      }]).select().single()
+    const email = req.body.email
+    console.log('Email received:', email)
 
-      return res.json({
-        success: true,
-        withdrawalId: 'SIM_' + txn.id,
-        amountINR,
-        message: 'Withdrawal simulated! Cashfree SDK not properly initialized.'
-      })
-    }
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single()
 
-    try {
-      console.log('Adding beneficiary:', beneId)
-      const beneResponse = await cashfreePayouts.beneficiary.add({
-        beneId,
-        name: accountName,
-        email,
-        phone: phone || user.phone || '9999999999',
-        bankDetails: {
-          bankAccount,
-          ifsc
-        }
-      })
-      console.log('Beneficiary added successfully:', beneResponse)
-    } catch (beneError) {
-      console.log('Beneficiary add error (might already exist):', beneError.message)
-      // Continue with payout even if beneficiary exists
-    }
+    console.log('User found:', user)
+    console.log('User error:', userError)
 
-    // Step 2: Request Payout
-    const transferId = `wd_${Date.now()}_${nanoid(5)}`
-    
-    try {
-      console.log('Requesting payout:', transferId)
-      const payoutResponse = await cashfreePayouts.transfers.requestTransfer({
-        transferId,
-        amount: amountINR.toString(),
-        transferMode: 'IMPS',
-        beneId,
-        remark: 'G-Link Gold Withdrawal'
-      })
-
-      console.log('Cashfree Payout Response:', JSON.stringify(payoutResponse))
-
-      if (payoutResponse.status === 'SUCCESS' || payoutResponse.status === 'PENDING') {
-        // Deduct gold from user balance
-        await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
-
-        // Record transaction
-        const { data: txn } = await supabase.from('transactions').insert([{
-          user_email: email,
-          type: 'withdrawal',
-          amount_inr: amountINR,
-          gold_grams: goldGrams,
-          status: payoutResponse.status === 'SUCCESS' ? 'completed' : 'processing',
-          cashfree_transfer_id: transferId,
-          cashfree_reference_id: payoutResponse.referenceId
-        }]).select().single()
-
-        res.json({
-          success: true,
-          withdrawalId: transferId,
-          amountINR,
-          status: payoutResponse.status,
-          message: payoutResponse.status === 'SUCCESS' ? 'Withdrawal successful!' : 'Withdrawal is being processed.'
+    if (!user) {
+      // Try case insensitive search
+      const { data: users } = await supabase
+        .from('users')
+        .select('*')
+        .ilike('email', email)
+      
+      console.log('Case insensitive search:', users)
+      
+      if (!users || users.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          error: 'User not found. Email: ' + email
         })
-      } else {
-        throw new Error(`Cashfree Error: ${payoutResponse.message || 'Transfer failed'}`)
       }
-    } catch (payoutError) {
-      console.log('Payout request failed:', payoutError.message)
-      throw new Error(`Cashfree Payout Failed: ${payoutError.message}`)
+      
+      // Use first match
+      user = users[0]
     }
-
-  } catch (e) {
+    
+    const { amount_inr, bank_account, 
+            ifsc, account_name } = req.body
+    
+    if (!email || !amount_inr) {
+      return res.status(400).json({ 
+        success: false, error: 'All fields required' 
+      })
+    }
+    
+    console.log('User gold:', user.gold_grams)
+    
+    const priceRes = await grail.get('/api/trading/gold/price')
+    const pricePerOunce = parseFloat(
+      priceRes.data?.data?.price || 5109)
+    const inrPerGram = (pricePerOunce / 31.1035) * 84
+    const goldNeeded = parseFloat(
+      (parseFloat(amount_inr) / inrPerGram).toFixed(4))
+    
+    console.log('Gold needed:', goldNeeded, 
+                'User has:', user.gold_grams)
+    
+    if ((user.gold_grams || 0) < goldNeeded) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Insufficient gold balance. You have ' + 
+               user.gold_grams + 'g but need ' + goldNeeded + 'g'
+      })
+    }
+    
+    const newGold = parseFloat(
+      ((user.gold_grams || 0) - goldNeeded).toFixed(4))
+    
+    await supabase
+      .from('users')
+      .update({ gold_grams: newGold })
+      .eq('email', email)
+    
+    const { data: withdrawalInsert, error: insertError } = await supabase
+      .from('withdrawals')
+      .insert([{
+        email,
+        amount_inr: parseFloat(amount_inr),
+        gold_grams: goldNeeded,
+        bank_account: bank_account || '',
+        ifsc: ifsc || '',
+        account_name: account_name || '',
+        status: 'pending',
+        created_at: new Date().toISOString()
+      }])
+    
+    console.log('Withdrawal inserted with email:', email)
+    console.log('Withdrawal data:', {
+      email,
+      amount_inr: parseFloat(amount_inr),
+      gold_grams: goldNeeded,
+      status: 'pending'
+    })
+    console.log('Insert result:', withdrawalInsert)
+    console.log('Insert error:', insertError)
+    
+    transporter.sendMail({
+      from: '"G-Link Gold" <' + process.env.EMAIL_USER + '>',
+      to: email,
+      subject: 'Withdrawal Request Received 🪙',
+      html: `<div style="background:#1a1a1a;
+        padding:30px;border-radius:12px;
+        font-family:Arial">
+        <h2 style="color:#D4AF37">
+          Withdrawal Requested! 🪙
+        </h2>
+        <p style="color:#fff">
+          Amount: <b>₹${amount_inr}</b>
+        </p>
+        <p style="color:#fff">
+          Gold Deducted: <b>${goldNeeded}g</b>
+        </p>
+        <p style="color:#fff">
+          Remaining Gold: <b>${newGold}g</b>
+        </p>
+        <p style="color:#888">
+          Account: ${account_name || 'N/A'}
+        </p>
+        <p style="color:#888">
+          Bank: ${bank_account || 'N/A'} 
+          | IFSC: ${ifsc || 'N/A'}
+        </p>
+        <p style="color:#555;font-size:12px;
+          margin-top:16px">
+          Processing time: 2-3 business days
+        </p>
+      </div>`
+    }).catch(e => console.log('Email error:', e.message))
+    
+    console.log('Withdrawal saved successfully')
+    
+    res.json({ 
+      success: true, 
+      message: 'Withdrawal request submitted!',
+      goldDeducted: goldNeeded,
+      remainingGold: newGold,
+      amountInr: amount_inr,
+      status: 'pending'
+    })
+    
+  } catch(e) {
     console.log('Withdraw error:', e.message)
-    res.status(500).json({ success: false, error: e.message })
+    res.status(500).json({ 
+      success: false, error: e.message 
+    })
   }
 })
 

@@ -452,7 +452,11 @@
 
     async function loadDashboard() {
       try {
-        const res = await fetch('/api/dashboard?email=' + encodeURIComponent(user.email));
+        // Use local server if running on localhost, otherwise use current origin
+        const baseURL = window.location.hostname === 'localhost' ? 
+          'http://localhost:3001' : window.location.origin;
+        
+        const res = await fetch(baseURL + '/api/dashboard?email=' + encodeURIComponent(user.email));
         const data = await res.json();
         if (data.success) {
           currentGoldBalance = parseFloat(data.goldGrams || 0);
@@ -511,22 +515,26 @@
       lucide.createIcons();
 
       try {
-        const response = await fetch('/api/withdraw', {
+        // Use local server if running on localhost, otherwise use current origin
+        const baseURL = window.location.hostname === 'localhost' ? 
+          'http://localhost:3001' : window.location.origin;
+        
+        const response = await fetch(baseURL + '/api/withdraw', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: user.email,
-            goldGrams: grams,
-            bankAccount: document.getElementById('accNumber').value,
+            amount_inr: Math.round(grams * currentGoldPrice),
+            bank_account: document.getElementById('accNumber').value,
             ifsc: document.getElementById('accIfsc').value,
-            accountName: document.getElementById('accName').value,
+            account_name: document.getElementById('accName').value,
             phone: document.getElementById('accPhone').value
           })
         });
 
         const data = await response.json();
         if (data.success) {
-          alert(`Success! Withdrawal initiated. ID: ${data.withdrawalId}`);
+          alert(`Success! ${data.message}`);
           closeWithdrawModal();
           loadDashboard();
         } else {
