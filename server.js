@@ -125,7 +125,8 @@ const twilioClient = process.env.TWILIO_ACCOUNT_SID ?
   twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null
 
 // Cashfree Payouts Configuration - using the correct SDK v2.0.2 pattern
-const cashfreePayouts = require('cashfree-pg-sdk-nodejs').Payouts({
+const { Payouts } = require('cashfree-pg-sdk-nodejs')
+const cashfreePayouts = new Payouts({
   clientId: process.env.CASHFREE_CLIENT_ID,
   clientSecret: process.env.CASHFREE_CLIENT_SECRET,
   environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
