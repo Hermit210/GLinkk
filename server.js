@@ -9,6 +9,7 @@ const { createClient } = require('@supabase/supabase-js')
 const { Connection, Keypair, Transaction, clusterApiUrl } = require('@solana/web3.js')
 const crypto = require('crypto')
 const twilio = require('twilio')
+const { Payouts } = require('cashfree-pg-sdk-nodejs')
 
 const passport = require('passport')
 const GoogleStrategy = require('passport-google-oauth20').Strategy
@@ -20,23 +21,33 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-const BASE_URL = process.env.BASE_URL || 'https://glink-n0y9.onrender.com'
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${BASE_URL}/auth/google/callback`
 console.log('--- Auth Configuration ---')
 console.log('BASE_URL:', BASE_URL)
 console.log('GOOGLE_REDIRECT_URI:', GOOGLE_REDIRECT_URI)
 console.log('---------------------------')
+
+let finalRedirectUri = GOOGLE_REDIRECT_URI;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.RENDER;
+
+if (IS_PRODUCTION) {
+  // For production, we want to ensure we use the correct base URL
+  finalRedirectUri = `${BASE_URL}/auth/google/callback`;
+  console.log('Production environment detected, using Redirect URI:', finalRedirectUri);
+}
+
 const SESSION_SECRET = process.env.SESSION_SECRET || 'glink_secret_key_2024'
-const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
 app.use(session({
   secret: SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
+  proxy: IS_PRODUCTION,
   cookie: {
     maxAge: 24 * 60 * 60 * 1000,
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: IS_PRODUCTION ? 'none' : 'lax',
     secure: IS_PRODUCTION
   }
 }))
@@ -113,6 +124,14 @@ const razorpay = new Razorpay({
 // Twilio client for SMS
 const twilioClient = process.env.TWILIO_ACCOUNT_SID ?
   twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null
+
+// Cashfree Payouts Configuration
+const cashfreePayouts = new Payouts({
+  clientId: process.env.CASHFREE_CLIENT_ID,
+  clientSecret: process.env.CASHFREE_CLIENT_SECRET,
+  env: process.env.CASHFREE_ENV === 'PROD' ? 'PROD' : 'TEST'
+})
+console.log('Cashfree Payouts:', process.env.CASHFREE_CLIENT_ID ? 'Configured' : 'Missing')
 
 // SMS sending function
 async function sendSMS(to, message) {
@@ -662,13 +681,19 @@ app.post('/api/auth/wallet-login', async (req, res) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: GOOGLE_REDIRECT_URI
+  callbackURL: finalRedirectUri,
+  proxy: true
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    console.log('--- Google Auth Callback ---')
+    if (!profile || !profile.emails || !profile.emails[0]) {
+      console.log('No profile or email found in Google response')
+      return done(new Error('No email found from Google'), null)
+    }
     const email = profile.emails[0].value
     const name = profile.displayName
 
-    console.log('Google login:', email, name)
+    console.log('Login attempt for:', email, 'Name:', name)
 
     let { data: user } = await supabase
       .from('users')
@@ -1673,77 +1698,95 @@ app.post('/api/groups/:groupId/share-gold', async (req, res) => {
 
 app.post('/api/withdraw', async (req, res) => {
   try {
-    const { email, goldGrams, bankAccount, ifsc, accountName } = req.body
+    const { email, goldGrams, bankAccount, ifsc, accountName, phone } = req.body
     const { data: user } = await supabase.from('users').select('*').eq('email', email).single()
     if (!user) throw new Error('User not found')
     if ((user.gold_grams || 0) < goldGrams) throw new Error('Insufficient balance')
 
     const inrPerGram = await getGoldPrice()
-    const estimatedINR = Math.round(goldGrams * inrPerGram)
+    const amountINR = Math.round(goldGrams * inrPerGram)
 
-    // For demo purposes, just deduct gold without real payout
-    // Uncomment below for real Razorpay payouts (requires business account)
+    console.log('--- Cashfree Withdrawal Initiation ---')
+    console.log('User:', email)
+    console.log('Amount INR:', amountINR)
+    console.log('Bank Details:', { bankAccount, ifsc, accountName })
 
-    /*
-    // Step 1: Create or get fund account
-    let fundAccountId = user.fund_account_id
-    if (!fundAccountId) {
-      const fundAccount = await razorpay.fundAccount.create({
-        contact: {
-          name: accountName,
-          email: email,
-          contact: user.phone || '9999999999',
-          type: 'customer'
-        },
-        account_type: 'bank_account',
-        bank_account: {
-          name: accountName,
-          ifsc: ifsc,
-          account_number: bankAccount
+    if (!process.env.CASHFREE_CLIENT_ID) {
+      console.log('Cashfree not configured, using simulated withdrawal')
+      await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
+      const { data: txn } = await supabase.from('transactions').insert([{
+        user_email: email,
+        type: 'withdrawal',
+        amount_inr: amountINR,
+        gold_grams: goldGrams,
+        status: 'completed',
+        details: 'Simulated (Cashfree not configured)'
+      }]).select().single()
+
+      return res.json({
+        success: true,
+        withdrawalId: 'SIM_' + txn.id,
+        amountINR,
+        message: 'Withdrawal simulated! Cashfree API keys missing.'
+      })
+    }
+
+    // Step 1: Add Beneficiary to Cashfree
+    const beneId = `bene_${email.replace(/[^a-zA-Z0-9]/g, '_')}`
+    try {
+      await cashfreePayouts.beneficiary.add({
+        beneId,
+        name: accountName,
+        email,
+        phone: phone || user.phone || '9999999999',
+        bankDetails: {
+          bankAccount,
+          ifsc
         }
       })
-      fundAccountId = fundAccount.id
-      
-      // Save fund account ID to user
-      await supabase.from('users').update({ fund_account_id: fundAccountId }).eq('email', email)
+      console.log('Beneficiary added/verified:', beneId)
+    } catch (beneError) {
+      console.log('Beneficiary add error (might already exist):', beneError.message)
     }
-    
-    // Step 2: Create payout
-    const payout = await razorpay.payouts.create({
-      account_number: process.env.RAZORPAY_ACCOUNT_NUMBER,
-      fund_account_id: fundAccountId,
-      amount: estimatedINR * 100, // in paise
-      currency: 'INR',
-      mode: 'IMPS',
-      purpose: 'payout',
-      queue_if_low_balance: true,
-      reference_id: 'WD_' + Date.now(),
-      narration: 'G-Link Gold Withdrawal'
+
+    // Step 2: Request Payout
+    const transferId = `wd_${Date.now()}_${nanoid(5)}`
+    const payoutResponse = await cashfreePayouts.transfers.requestTransfer({
+      transferId,
+      amount: amountINR.toString(),
+      transferMode: 'IMPS',
+      beneId,
+      remark: 'G-Link Gold Withdrawal'
     })
-    
-    console.log('Payout created:', payout.id)
-    */
 
-    // Deduct gold from user balance
-    await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
+    console.log('Cashfree Payout Response:', JSON.stringify(payoutResponse))
 
-    // Record transaction
-    const { data: txn } = await supabase.from('transactions').insert([{
-      user_email: email,
-      type: 'withdrawal',
-      amount_inr: estimatedINR,
-      gold_grams: goldGrams,
-      status: 'completed', // Change to 'processing' for real payouts
-      // razorpay_payout_id: payout.id // Uncomment for real payouts
-    }]).select().single()
+    if (payoutResponse.status === 'SUCCESS' || payoutResponse.status === 'PENDING') {
+      // Deduct gold from user balance
+      await supabase.from('users').update({ gold_grams: user.gold_grams - goldGrams }).eq('email', email)
 
-    res.json({
-      success: true,
-      withdrawalId: 'WD_' + txn.id,
-      estimatedINR,
-      goldGrams,
-      message: 'Withdrawal simulated! Gold deducted from vault. Real payouts require business account.'
-    })
+      // Record transaction
+      const { data: txn } = await supabase.from('transactions').insert([{
+        user_email: email,
+        type: 'withdrawal',
+        amount_inr: amountINR,
+        gold_grams: goldGrams,
+        status: payoutResponse.status === 'SUCCESS' ? 'completed' : 'processing',
+        cashfree_transfer_id: transferId,
+        cashfree_reference_id: payoutResponse.referenceId
+      }]).select().single()
+
+      res.json({
+        success: true,
+        withdrawalId: transferId,
+        amountINR,
+        status: payoutResponse.status,
+        message: payoutResponse.status === 'SUCCESS' ? 'Withdrawal successful!' : 'Withdrawal is being processed.'
+      })
+    } else {
+      throw new Error(`Cashfree Error: ${payoutResponse.message || 'Transfer failed'}`)
+    }
+
   } catch (e) {
     console.log('Withdraw error:', e.message)
     res.status(500).json({ success: false, error: e.message })

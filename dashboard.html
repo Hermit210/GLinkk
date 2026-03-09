@@ -220,7 +220,18 @@
           <p class="text-[11px] text-gray-400 font-medium tracking-wide">Update your account.</p>
         </div><i data-lucide="arrow-right"
           class="w-4 h-4 text-gray-600 ml-auto group-hover:text-blue-400 group-hover:translate-x-1 transition-all"></i>
-      </a></div>
+      </a><div class="flex items-center gap-4 bg-dark-card border border-dark-border rounded-xl p-5 hover:border-gold hover:bg-gold/5 transition-all duration-300 group shadow-md cursor-pointer" onclick="openWithdrawModal()">
+        <div
+          class="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.1)] group-hover:scale-110 transition-transform">
+          <i data-lucide="wallet" class="w-4 h-4 text-green-400"></i>
+        </div>
+        <div>
+          <h4 class="text-base font-bold text-green-400 mb-0.5">Withdraw Gold</h4>
+          <p class="text-[11px] text-gray-400 font-medium tracking-wide">Convert gold to bank transfer.</p>
+        </div><i data-lucide="arrow-right"
+          class="w-4 h-4 text-gray-600 ml-auto group-hover:text-green-400 group-hover:translate-x-1 transition-all"></i>
+      </div>
+    </div>
     <!-- Blessing Pages Container -->
     <div class="bg-dark-card border border-dark-border rounded-2xl p-6 shadow-xl relative overflow-hidden">
       <!-- Gradient -->
@@ -333,13 +344,79 @@
           </div>
           <div class="flex gap-3 mt-4"><button onclick="copyBlessingLink()" id="modalCopyBtn"
               class="flex-1 border border-dark-border bg-dark-card py-3.5 rounded-xl text-sm font-bold text-white hover:border-gold/50 transition flex justify-center items-center gap-2"><i
-                data-lucide="copy" class="w-4 h-4"></i>Copy Link </button><button onclick="shareOnWhatsApp()"
+                data-lucide="copy" class="w-4 h-4"></i>Copy Link 
+            </button><button onclick="shareOnWhatsApp()"
               class="flex-1 bg-[#25D366] py-3.5 rounded-xl text-sm font-bold text-white hover:bg-[#20b858] transition shadow-lg hover:shadow-[#25D366]/30 hover:scale-[1.02] flex justify-center items-center gap-2"><i
-                data-lucide="message-circle" class="w-4 h-4"></i>Send via WA </button></div>
+                data-lucide="message-circle" class="w-4 h-4"></i>Send via WA 
+            </button></div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Withdrawal Modal -->
+  <div id="withdrawModal"
+    class="fixed inset-0 bg-black/80 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 transition-opacity">
+    <div
+      class="bg-dark-card border border-dark-border rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden relative">
+      <div class="px-8 py-6 border-b border-dark-border flex justify-between items-center bg-dark">
+        <h3 class="text-xl font-extrabold text-green-400 tracking-tighter">Withdraw to Bank</h3>
+        <button onclick="closeWithdrawModal()"
+          class="w-8 h-8 rounded-full bg-dark border border-dark-border text-gray-400 flex items-center justify-center hover:bg-white hover:text-black transition-colors shrink-0">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="p-8">
+        <form id="withdrawForm" class="space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Gold to Withdraw (grams)</label>
+            <div class="relative">
+              <i data-lucide="coins" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+              <input type="number" id="withdrawGrams" step="0.0001" min="0.0001" required
+                class="w-full pl-10 pr-4 py-3 text-sm bg-dark border border-dark-border text-white rounded-xl focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition-all"
+                placeholder="0.0000">
+            </div>
+            <p id="withdrawValuePreview" class="text-[10px] text-gold font-bold mt-1 ml-1 uppercase tracking-widest">Est. Value: ₹0</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Account Holder Name</label>
+              <input type="text" id="accName" required
+                class="w-full px-4 py-3 text-sm bg-dark border border-dark-border text-white rounded-xl focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition-all"
+                placeholder="Full Name">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Account Number</label>
+              <input type="text" id="accNumber" required
+                class="w-full px-4 py-3 text-sm bg-dark border border-dark-border text-white rounded-xl focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition-all"
+                placeholder="Bank Account Number">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">IFSC Code</label>
+              <input type="text" id="accIfsc" required
+                class="w-full px-4 py-3 text-sm bg-dark border border-dark-border text-white rounded-xl focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition-all"
+                placeholder="HDFC0001234">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Phone Number</label>
+              <input type="tel" id="accPhone" required
+                class="w-full px-4 py-3 text-sm bg-dark border border-dark-border text-white rounded-xl focus:border-gold focus:ring-1 focus:ring-gold focus:outline-none transition-all"
+                placeholder="10-digit number">
+            </div>
+          </div>
+          <div class="pt-4 mt-2 border-t border-dark-border">
+            <button type="submit" id="confirmWithdrawBtn"
+              class="w-full bg-green-500 text-white font-bold py-3.5 px-6 rounded-xl hover:bg-green-400 hover:scale-[1.02] shadow-[0_0_20px_rgba(34,197,94,0.2)] transition-all flex items-center justify-center gap-2 group">
+              Confirm Withdrawal <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script>
     lucide.createIcons();
 
@@ -370,14 +447,19 @@
     const navUser = document.getElementById('userName');
     if (navUser) navUser.textContent = user?.name || user?.email || 'User';
 
+    let currentGoldBalance = 0;
+    let currentGoldPrice = 7200;
+
     async function loadDashboard() {
       try {
         const res = await fetch('/api/dashboard?email=' + encodeURIComponent(user.email));
         const data = await res.json();
         if (data.success) {
-          if (document.getElementById('goldGrams')) document.getElementById('goldGrams').textContent = parseFloat(data.goldGrams || 0).toFixed(4) + 'g';
+          currentGoldBalance = parseFloat(data.goldGrams || 0);
+          currentGoldPrice = data.livePrice || 7200;
+          if (document.getElementById('goldGrams')) document.getElementById('goldGrams').textContent = currentGoldBalance.toFixed(4) + 'g';
           if (document.getElementById('goldValue')) document.getElementById('goldValue').textContent = '₹' + Math.round(data.goldValueINR || 0).toLocaleString();
-          if (document.getElementById('livePrice')) document.getElementById('livePrice').textContent = '₹' + Math.round(data.livePrice || 7200).toLocaleString() + '/gram';
+          if (document.getElementById('livePrice')) document.getElementById('livePrice').textContent = '₹' + Math.round(currentGoldPrice).toLocaleString() + '/gram';
           if (document.getElementById('linksCreated')) document.getElementById('linksCreated').textContent = data.linksCreated || 0;
           if (document.getElementById('totalTx')) document.getElementById('totalTx').textContent = data.transactions?.length || 0;
           if (document.getElementById('grailStatus')) document.getElementById('grailStatus').textContent = data.grailUserId ? '✓' : '✗';
@@ -394,6 +476,71 @@
         }
       }
     }
+
+    function openWithdrawModal() {
+      document.getElementById('withdrawModal').classList.remove('hidden');
+      document.getElementById('accName').value = user?.name || '';
+      document.getElementById('withdrawGrams').max = currentGoldBalance;
+      lucide.createIcons();
+    }
+
+    function closeWithdrawModal() {
+      document.getElementById('withdrawModal').classList.add('hidden');
+      document.getElementById('withdrawForm').reset();
+      document.getElementById('withdrawValuePreview').textContent = 'Est. Value: ₹0';
+    }
+
+    document.getElementById('withdrawGrams')?.addEventListener('input', (e) => {
+      const grams = parseFloat(e.target.value) || 0;
+      const value = Math.round(grams * currentGoldPrice);
+      document.getElementById('withdrawValuePreview').textContent = `Est. Value: ₹${value.toLocaleString()}`;
+    });
+
+    document.getElementById('withdrawForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const grams = parseFloat(document.getElementById('withdrawGrams').value);
+      
+      if (grams > currentGoldBalance) {
+        alert('Insufficient gold balance in vault.');
+        return;
+      }
+
+      const btn = document.getElementById('confirmWithdrawBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...';
+      lucide.createIcons();
+
+      try {
+        const response = await fetch('/api/withdraw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user.email,
+            goldGrams: grams,
+            bankAccount: document.getElementById('accNumber').value,
+            ifsc: document.getElementById('accIfsc').value,
+            accountName: document.getElementById('accName').value,
+            phone: document.getElementById('accPhone').value
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          alert(`Success! Withdrawal initiated. ID: ${data.withdrawalId}`);
+          closeWithdrawModal();
+          loadDashboard();
+        } else {
+          alert('Withdrawal Failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error('Withdraw error:', err);
+        alert('Connection error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm Withdrawal <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+        lucide.createIcons();
+      }
+    });
 
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
