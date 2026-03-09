@@ -9,7 +9,6 @@ const { createClient } = require('@supabase/supabase-js')
 const { Connection, Keypair, Transaction, clusterApiUrl } = require('@solana/web3.js')
 const crypto = require('crypto')
 const twilio = require('twilio')
-const { Payouts } = require('cashfree-pg-sdk-nodejs')
 
 const passport = require('passport')
 const GoogleStrategy = require('passport-google-oauth20').Strategy
@@ -125,11 +124,11 @@ const razorpay = new Razorpay({
 const twilioClient = process.env.TWILIO_ACCOUNT_SID ?
   twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null
 
-// Cashfree Payouts Configuration
-const cashfreePayouts = new Payouts({
+// Cashfree Payouts Configuration - using the correct SDK v2.0.2 pattern
+const cashfreePayouts = require('cashfree-pg-sdk-nodejs').Payouts({
   clientId: process.env.CASHFREE_CLIENT_ID,
   clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-  env: process.env.CASHFREE_ENV === 'PROD' ? 'PROD' : 'TEST'
+  environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
 })
 console.log('Cashfree Payouts:', process.env.CASHFREE_CLIENT_ID ? 'Configured' : 'Missing')
 
