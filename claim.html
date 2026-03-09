@@ -231,16 +231,20 @@
   <script>
     lucide.createIcons();
 
-    const slug = new URLSearchParams(window.location.search).get('id');
+    const urlParams = new URLSearchParams(window.location.search);
+    const linkId = urlParams.get('id');
+    console.log('Link ID:', linkId);
     let linkData = null;
 
-    if (!slug) {
+    if (!linkId) {
+      console.error('Invalid link format. ID is missing.');
       showError("Invalid link format. ID is missing.");
     }
 
     async function loadLink() {
       try {
-        const res = await fetch('/api/links/' + slug);
+        console.log('Loading link for ID:', linkId);
+        const res = await fetch('/api/links/' + encodeURIComponent(linkId));
         const data = await res.json();
 
         removeGlobalLoader();
@@ -365,7 +369,7 @@
       showClaimingLoader();
 
       try {
-        const res = await fetch('/api/links/' + slug + '/claim', {
+        const res = await fetch('/api/links/' + linkId + '/claim', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, phone })
@@ -393,7 +397,7 @@
       }
     }
 
-    if (slug) {
+    if (linkId) {
       loadLink();
     }
   </script>

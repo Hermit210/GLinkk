@@ -20,8 +20,12 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
+const BASE_URL = process.env.BASE_URL || 'https://glink-n0y9.onrender.com'
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `${BASE_URL}/auth/google/callback`
+console.log('--- Auth Configuration ---')
+console.log('BASE_URL:', BASE_URL)
+console.log('GOOGLE_REDIRECT_URI:', GOOGLE_REDIRECT_URI)
+console.log('---------------------------')
 const SESSION_SECRET = process.env.SESSION_SECRET || 'glink_secret_key_2024'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 
@@ -977,13 +981,27 @@ app.post('/api/links/create', async (req, res) => {
 
 app.get('/api/links/:slug', async (req, res) => {
   try {
-    console.log('Looking for link with ID:', req.params.slug)
-    const { data, error } = await supabase.from('gold_links').select('*').eq('link_id', req.params.slug).single()
-    console.log('Database query result:', { data, error })
+    const slug = req.params.slug
+    console.log('Looking for link with ID/Slug:', slug)
+    
+    if (slug === '[object Object]' || !slug) {
+      console.log('Invalid slug received:', slug)
+      return res.status(400).json({ success: false, error: 'Invalid link identifier' })
+    }
+    let { data, error } = await supabase.from('gold_links').select('*').eq('link_id', slug).single()
+    
     if (error || !data) {
-      console.log('Link not found error:', error?.message || 'No data returned')
+      console.log('link_id match failed, trying slug match...')
+      const slugResult = await supabase.from('gold_links').select('*').eq('slug', slug).single()
+      data = slugResult.data
+      error = slugResult.error
+    }
+
+    if (error || !data) {
+      console.log('Link not found in DB for:', slug)
       throw new Error('Link not found')
     }
+    
     console.log('Link found successfully:', data.link_id)
     res.json({ success: true, link: data })
   } catch (e) {
@@ -995,10 +1013,23 @@ app.get('/api/links/:slug', async (req, res) => {
 app.post('/api/links/:slug/claim', async (req, res) => {
   try {
     const { name, email, phone } = req.body
-    console.log('Claim attempt:', { name, email, phone, slug: req.params.slug })
+    const { slug } = req.params
+    console.log('Claim attempt:', { name, email, phone, slug })
 
-    const { data: link } = await supabase.from('gold_links').select('*').eq('link_id', req.params.slug).single()
-    if (!link) throw new Error('Link not found')
+    // Try matching by link_id first, then slug
+    let { data: link, error: fetchError } = await supabase.from('gold_links').select('*').eq('link_id', slug).single()
+    
+    if (fetchError || !link) {
+      console.log('Claim: link_id match failed, trying slug match...')
+      const slugResult = await supabase.from('gold_links').select('*').eq('slug', slug).single()
+      link = slugResult.data
+      fetchError = slugResult.error
+    }
+    
+    if (fetchError || !link) {
+      console.log('Claim: Link not found in DB:', slug)
+      throw new Error('Link not found')
+    }
 
     // Check if already claimed - do this FIRST before any other operations
     if (link.status === 'claimed') {

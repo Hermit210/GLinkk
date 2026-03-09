@@ -521,7 +521,7 @@
         removeCreatingLoader()
 
         if (data.success) {
-          showSuccess(data.link, data.id)
+          showSuccess(data.link.link_id)
         } else {
           showMsg(data.error || 'Failed to create link', 'error')
         }
