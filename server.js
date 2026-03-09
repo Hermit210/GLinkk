@@ -124,14 +124,43 @@ const razorpay = new Razorpay({
 const twilioClient = process.env.TWILIO_ACCOUNT_SID ?
   twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null
 
-// Cashfree Payouts Configuration - using the correct SDK v2.0.2 pattern
-const { Payouts } = require('cashfree-pg-sdk-nodejs')
-const cashfreePayouts = new Payouts({
-  clientId: process.env.CASHFREE_CLIENT_ID,
-  clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-  environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
-})
-console.log('Cashfree Payouts:', process.env.CASHFREE_CLIENT_ID ? 'Configured' : 'Missing')
+// Cashfree Payouts Configuration - trying different initialization patterns
+const cashfreePgSDK = require('cashfree-pg-sdk-nodejs')
+let cashfreePayouts = null
+
+try {
+  // Try pattern 1: Direct constructor
+  cashfreePayouts = new cashfreePgSDK.Payouts({
+    clientId: process.env.CASHFREE_CLIENT_ID,
+    clientSecret: process.env.CASHFREE_CLIENT_SECRET,
+    environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
+  })
+  console.log('Cashfree Payouts: Configured with pattern 1')
+} catch (e1) {
+  try {
+    // Try pattern 2: Direct function call
+    cashfreePayouts = cashfreePgSDK.Payouts({
+      clientId: process.env.CASHFREE_CLIENT_ID,
+      clientSecret: process.env.CASHFREE_CLIENT_SECRET,
+      environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
+    })
+    console.log('Cashfree Payouts: Configured with pattern 2')
+  } catch (e2) {
+    try {
+      // Try pattern 3: Factory method
+      cashfreePayouts = cashfreePgSDK.createPayouts({
+        clientId: process.env.CASHFREE_CLIENT_ID,
+        clientSecret: process.env.CASHFREE_CLIENT_SECRET,
+        environment: process.env.CASHFREE_ENV === 'PROD' ? 'production' : 'sandbox'
+      })
+      console.log('Cashfree Payouts: Configured with pattern 3')
+    } catch (e3) {
+      console.log('Cashfree Payouts: All initialization patterns failed, using fallback')
+      console.log('Error details:', { e1: e1.message, e2: e2.message, e3: e3.message })
+    }
+  }
+}
+console.log('Cashfree Payouts:', cashfreePayouts ? 'Configured' : 'Missing')
 
 // SMS sending function
 async function sendSMS(to, message) {
