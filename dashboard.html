@@ -114,9 +114,7 @@
             class="px-5 py-2 rounded-xl text-sm font-bold text-gray-300 hover:text-gold hover:bg-gold/10 transition-all flex items-center gap-2"><i
               data-lucide="plus-circle" class="w-4 h-4"></i>Create </a><a href="profile.html"
             class="px-5 py-2 rounded-xl text-sm font-bold text-gray-300 hover:text-gold hover:bg-gold/10 transition-all flex items-center gap-2"><i
-              data-lucide="user-circle" class="w-4 h-4"></i>Profile </a><a href="transactions.html"
-            class="px-5 py-2 rounded-xl text-sm font-bold text-gray-300 hover:text-gold hover:bg-gold/10 transition-all flex items-center gap-2"><i
-              data-lucide="activity" class="w-4 h-4"></i>Transactions </a></div>
+              data-lucide="user-circle" class="w-4 h-4"></i>Profile </a></div>
         <div class="flex items-center"><button onclick="logout()"
             class="bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 group"><i
               data-lucide="log-out" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"></i>Logout
@@ -132,10 +130,7 @@
         data-lucide="plus-circle" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Create</span></a><a
       href="profile.html"
       class="flex-1 flex flex-col items-center justify-center p-2 text-gray-400 hover:text-gold transition-colors"><i
-        data-lucide="user-circle" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Profile</span></a><a
-      href="transactions.html"
-      class="flex-1 flex flex-col items-center justify-center p-2 text-gray-400 hover:text-gold transition-colors"><i
-        data-lucide="activity" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Activity</span></a>
+        data-lucide="user-circle" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Profile</span></a>
   </div>
   <main class="pt-28 pb-32 md:pb-16 px-4 max-w-5xl mx-auto w-full animate-fade-in-up">
     <!-- Gold Vault Main Hero Card -->
@@ -165,7 +160,7 @@
       </div>
     </div>
     <!-- Quick Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
       <div
         class="bg-dark-card border border-dark-border rounded-xl p-5 text-center hover:border-gold/50 transition-colors duration-300 group hover:-translate-y-1 shadow-md relative overflow-hidden">
         <div class="absolute top-0 right-0 w-12 h-12 bg-gold/5 blur-xl rounded-full"></div>
@@ -175,16 +170,6 @@
         </div>
         <h3 id="linksCreated" class="text-2xl font-extrabold text-white mb-0.5 tabular-nums">0</h3>
         <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Gold Links Sent</p>
-      </div>
-      <div
-        class="bg-dark-card border border-dark-border rounded-xl p-5 text-center hover:border-gold/50 transition-colors duration-300 group hover:-translate-y-1 shadow-md relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-12 h-12 bg-gold/5 blur-xl rounded-full"></div>
-        <div
-          class="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-          <i data-lucide="activity" class="w-4 h-4 text-gold"></i>
-        </div>
-        <h3 id="totalTx" class="text-2xl font-extrabold text-white mb-0.5 tabular-nums">0</h3>
-        <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Transactions</p>
       </div>
       <div
         class="bg-dark-card border border-dark-border rounded-xl p-5 text-center hover:border-gold/50 transition-colors duration-300 group hover:-translate-y-1 shadow-md relative overflow-hidden">
@@ -465,7 +450,6 @@
           if (document.getElementById('goldValue')) document.getElementById('goldValue').textContent = '₹' + Math.round(data.goldValueINR || 0).toLocaleString();
           if (document.getElementById('livePrice')) document.getElementById('livePrice').textContent = '₹' + Math.round(currentGoldPrice).toLocaleString() + '/gram';
           if (document.getElementById('linksCreated')) document.getElementById('linksCreated').textContent = data.linksCreated || 0;
-          if (document.getElementById('totalTx')) document.getElementById('totalTx').textContent = data.transactions?.length || 0;
           if (document.getElementById('grailStatus')) document.getElementById('grailStatus').textContent = data.grailUserId ? '✓' : '✗';
         }
       } catch (e) {
